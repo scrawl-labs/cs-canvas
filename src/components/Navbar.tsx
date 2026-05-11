@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Navbar() {
   return (
@@ -8,9 +9,12 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl px-6 flex h-14 items-center justify-between">
         <Link
           href="/"
-          className="font-mono text-lg font-semibold tracking-tight text-white hover:text-white/80 transition-colors"
+          className="flex items-center gap-0.5 hover:opacity-80 transition-opacity"
         >
-          cs-canvas
+          <Image src="/logo.png" alt="cs-canvas logo" width={36} height={36} className="object-contain" />
+          <span className="font-mono text-lg font-semibold tracking-tight text-white">
+            cs-canvas
+          </span>
         </Link>
 
         <a
