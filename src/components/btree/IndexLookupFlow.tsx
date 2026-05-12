@@ -36,7 +36,7 @@ const DATA: Record<string, NodeDef> = {
 };
 
 const IDX_EDGES = [["root","bL"],["root","bR"],["bL","l1"],["bL","l2"],["bR","l3"]];
-const DATA_EDGES = [["root","bL"],["root","bR"],["bL","l1"],["bL","l2"],["bR","l3"]];
+const DATA_EDGES = [["root","bL"],["root","bR"],["bL","l1"],["bR","l2"],["bR","l3"]];
 
 function cx(n: NodeDef) { return n.x + W / 2; }
 function cy(n: NodeDef) { return n.y + H / 2; }
@@ -61,8 +61,8 @@ const NORMAL: Step[] = [
   },
   {
     label: "Branch 탐색 (메모리)",
-    description: "'lee@...'는 N-Z 범위이므로 bR 포인터를 따라 내려갑니다. Branch도 자주 접근되어 거의 항상 캐시됩니다.",
-    idxHL: ["root", "bR"], dataHL: [], arrow: false,
+    description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. Branch도 자주 접근되어 거의 항상 캐시됩니다.",
+    idxHL: ["root", "bL"], dataHL: [], arrow: false,
     tag: "Buffer Pool", tagColor: "text-violet-400",
   },
   {
@@ -94,8 +94,8 @@ const COVERING: Step[] = [
   },
   {
     label: "Branch 탐색 (메모리)",
-    description: "Branch도 메모리 캐시. 포인터를 따라 내려갑니다.",
-    idxHL: ["root", "bR"], dataHL: [], arrow: false,
+    description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. 메모리 캐시.",
+    idxHL: ["root", "bL"], dataHL: [], arrow: false,
     tag: "Buffer Pool", tagColor: "text-violet-400",
   },
   {
