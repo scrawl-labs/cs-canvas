@@ -153,7 +153,7 @@ export default function IndexESR() {
                     <span className="text-white text-xs font-mono font-semibold flex-1">
                       {col.name}
                     </span>
-                    <span className="text-zinc-500 text-xs font-mono">{col.condition}</span>
+                    <span className="text-zinc-500 text-xs font-mono truncate max-w-[160px]">{col.condition}</span>
                   </motion.div>
                 ))}
               </div>

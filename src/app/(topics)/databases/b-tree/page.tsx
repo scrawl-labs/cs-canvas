@@ -131,7 +131,7 @@ export default function BTreePage() {
               { num: "01", text: "B+Tree는 왼쪽부터 정렬된 트리. 리프 분열 시 separator COPY — 실제 데이터는 항상 리프에만." },
               { num: "02", text: "DB에서 각 B+Tree 노드 = 16KB 페이지. Root/Branch는 Buffer Pool 상주, Leaf는 Disk에서 LRU 캐싱." },
               { num: "03", text: "InnoDB leaf record는 직렬화된 byte 배열. Secondary는 (인덱스 컬럼 + PK)만, Clustered는 모든 컬럼." },
-              { num: "04", text: "인덱스 → Clustered Index 접근 시 Random I/O 발생. Root/Branch는 메모리, Leaf는 Disk." },
+              { num: "04", text: "Secondary Index leaf(PK 획득)와 Clustered Index leaf(실제 row)는 물리적으로 다른 페이지 → Random I/O. 대량 조회일수록 이 비용이 N배로 누적됨." },
               { num: "05", text: "함수, 앞 와일드카드, 타입 불일치 → B+Tree 시작점 불가 → Full Scan." },
               { num: "06", text: "복합 인덱스는 Equality → Sort → Range 순서. Range 이후 컬럼은 정렬 보장 안 됨." },
               { num: "07", text: "SELECT 컬럼이 Secondary Index에 전부 있으면 Clustered Index 접근 생략 → Using index." },
