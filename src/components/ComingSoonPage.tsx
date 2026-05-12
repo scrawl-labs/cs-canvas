@@ -6,6 +6,7 @@ import Link from "next/link";
 interface SubtopicItem {
   name: string;
   description: string;
+  href?: string;
 }
 
 interface ComingSoonPageProps {
@@ -67,36 +68,57 @@ export default function ComingSoonPage({
 
         {/* subtopics grid */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {subtopics.map((subtopic, index) => (
-            <motion.div
-              key={subtopic.name}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.35,
-                delay: 0.1 + index * 0.06,
-                ease: [0.23, 1, 0.32, 1],
-              }}
-              className="group relative rounded-xl border border-white/10 bg-white/[0.03] p-5 overflow-hidden"
-            >
-              <div
-                className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${color}`}
-              />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-white">
-                    {subtopic.name}
-                  </h3>
-                  <span className="text-xs text-zinc-600 border border-white/5 rounded px-1.5 py-0.5 bg-white/[0.02]">
-                    soon
-                  </span>
+          {subtopics.map((subtopic, index) => {
+            const isReady = !!subtopic.href;
+            const inner = (
+              <>
+                <div
+                  className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${color}`}
+                />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-white">
+                      {subtopic.name}
+                    </h3>
+                    <span
+                      className={`text-xs border rounded px-1.5 py-0.5 ${
+                        isReady
+                          ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+                          : "text-zinc-600 border-white/5 bg-white/[0.02]"
+                      }`}
+                    >
+                      {isReady ? "ready →" : "soon"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    {subtopic.description}
+                  </p>
                 </div>
-                <p className="text-xs text-zinc-500 leading-relaxed">
-                  {subtopic.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+              </>
+            );
+
+            return (
+              <motion.div
+                key={subtopic.name}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.35,
+                  delay: 0.1 + index * 0.06,
+                  ease: [0.23, 1, 0.32, 1],
+                }}
+                className="group relative rounded-xl border border-white/10 bg-white/[0.03] p-5 overflow-hidden"
+              >
+                {isReady ? (
+                  <Link href={subtopic.href!} className="block">
+                    {inner}
+                  </Link>
+                ) : (
+                  inner
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>

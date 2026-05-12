@@ -5,6 +5,7 @@ const subtopics = [
     name: "B-Tree Index",
     description:
       "Insert and split operations — node structure updated visually.",
+    href: "/databases/b-tree",
   },
   {
     name: "Transactions & ACID",

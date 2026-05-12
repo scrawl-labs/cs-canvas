@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://cs-canvas.vercel.app"
+  ),
   title: "cs-canvas",
   description: "CS concepts, visualized interactively.",
+  openGraph: {
+    title: "cs-canvas",
+    description: "CS concepts, visualized interactively.",
+    images: [{ url: "/logo.png" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/logo.png"],
+  },
 };
 
 export default function RootLayout({
