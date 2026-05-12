@@ -281,16 +281,16 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
               </motion.g>
             )}
 
-            {/* covering done — stop indicator */}
+            {/* covering done — stop indicator above the found leaf */}
             {mode === "covering" && cur.done && (
-              <motion.g key="done" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <motion.g key="done" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}>
                 <rect
-                  x={IDX.l2.x + W + 6} y={IDX.l2.y - 2}
-                  width={68} height={H + 4} rx={4}
-                  fill="rgba(52,211,153,0.08)" stroke="rgba(52,211,153,0.35)" strokeWidth={1}
+                  x={IDX.l2.x - 2} y={IDX.l2.y - 22}
+                  width={W + 4} height={18} rx={4}
+                  fill="rgba(52,211,153,0.12)" stroke="rgba(52,211,153,0.45)" strokeWidth={1}
                 />
-                <text x={IDX.l2.x + W + 40} y={IDX.l2.y + H / 2 + 4}
-                  textAnchor="middle" fill="rgba(52,211,153,0.75)" fontSize={8} fontFamily="monospace">
+                <text x={IDX.l2.x + W / 2} y={IDX.l2.y - 9}
+                  textAnchor="middle" fill="rgba(52,211,153,0.9)" fontSize={8} fontFamily="monospace" fontWeight={600}>
                   Using index
                 </text>
               </motion.g>
