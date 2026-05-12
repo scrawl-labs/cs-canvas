@@ -140,7 +140,7 @@ export default function InnoDBInternals() {
               B+Tree의 각 노드가 하나의 페이지입니다. 아래는 Secondary Index leaf page의 내부 구조입니다.
             </p>
 
-            <div className="flex gap-6">
+            <div className="flex flex-col sm:flex-row gap-6">
               {/* page diagram */}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-mono text-zinc-600 mb-2">16KB Page (Secondary Index Leaf)</p>
@@ -180,7 +180,7 @@ export default function InnoDBInternals() {
               </div>
 
               {/* notes */}
-              <div className="w-56 shrink-0 space-y-3">
+              <div className="w-full sm:w-56 sm:shrink-0 space-y-3">
                 <p className="text-xs font-mono text-zinc-600 mb-2">핵심 포인트</p>
                 {PAGE_NOTES.map((note, i) => (
                   <div key={i} className="flex gap-2">

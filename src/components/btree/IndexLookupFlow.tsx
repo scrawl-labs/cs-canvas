@@ -299,7 +299,7 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
         </div>
 
         {/* step info */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1.5">
               <span className={`text-xs font-mono ${cur.tagColor}`}>{cur.tag}</span>

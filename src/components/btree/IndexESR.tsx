@@ -162,7 +162,7 @@ export default function IndexESR() {
 
           {/* index result */}
           <div className="mt-5 pt-5 border-t border-white/10">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               <div className="flex-1">
                 <p className="text-xs text-zinc-600 font-mono mb-2">인덱스 설계</p>
                 <div

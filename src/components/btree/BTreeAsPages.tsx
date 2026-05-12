@@ -139,10 +139,10 @@ export default function BTreeAsPages() {
         대상이 됩니다.
       </p>
 
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col sm:flex-row gap-6 items-start">
         <svg
           viewBox="0 0 400 280"
-          className="w-[340px] shrink-0"
+          className="w-full sm:w-[340px] sm:shrink-0"
           aria-hidden="true"
         >
           {/* Buffer Pool zone */}

@@ -74,14 +74,15 @@ export default function IndexSARGable() {
         </p>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col sm:flex-row">
         {/* case list */}
-        <div className="w-40 border-r border-white/10 shrink-0">
+        <div className="sm:w-40 border-b sm:border-b-0 sm:border-r border-white/10 sm:shrink-0">
+          <div className="flex sm:flex-col overflow-x-auto">
           {CASES.map((c, i) => (
             <button
               key={i}
               onClick={() => setActiveIdx(i)}
-              className={`w-full text-left px-4 py-3 text-xs font-mono transition-colors flex items-center gap-2 ${
+              className={`whitespace-nowrap shrink-0 sm:w-full text-left px-4 py-3 text-xs font-mono transition-colors flex items-center gap-2 ${
                 activeIdx === i
                   ? "bg-white/[0.06] text-white"
                   : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]"
@@ -95,6 +96,7 @@ export default function IndexSARGable() {
               {c.tag}
             </button>
           ))}
+          </div>
         </div>
 
         {/* detail */}
