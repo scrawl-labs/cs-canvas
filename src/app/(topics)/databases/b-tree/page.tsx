@@ -96,32 +96,6 @@ export default function BTreePage() {
           <IndexLookupFlow />
         </Section>
 
-        {/* 04 bridge callout */}
-        <div className="mb-16 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
-          <p className="text-xs font-mono text-zinc-600 mb-3">이 구조를 알면 다음이 납득됩니다</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              {
-                label: "왜 함수를 씌우면 안 되나?",
-                desc: "B+Tree는 '시작점'을 알아야 탐색합니다. 함수가 컬럼 값을 바꿔버리면 시작점을 계산할 수 없습니다.",
-              },
-              {
-                label: "왜 왼쪽 컬럼부터 써야 하나?",
-                desc: "복합 인덱스는 왼쪽 컬럼 기준으로 정렬됩니다. 앞 컬럼이 없으면 어느 서브트리로 내려갈지 결정할 수 없습니다.",
-              },
-              {
-                label: "왜 Covering이 빠른가?",
-                desc: "Clustered Index 접근(Random I/O)을 아예 생략합니다. Secondary Index Leaf에서 끝나므로 디스크 왕복이 줄어듭니다.",
-              },
-            ].map((item) => (
-              <div key={item.label}>
-                <p className="text-white text-xs font-semibold mb-1">{item.label}</p>
-                <p className="text-zinc-500 text-xs leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* 05 */}
         <Section
           number="05"
