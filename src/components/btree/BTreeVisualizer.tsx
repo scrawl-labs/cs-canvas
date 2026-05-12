@@ -32,39 +32,25 @@ const SCENARIOS: {
 }[] = [
   {
     title: "순차 삽입 & Split",
-    subtitle: "1, 2, 3, 4, 5를 차수 3 B-Tree에 삽입 — 노드가 꽉 차면 분열됩니다",
+    subtitle: "1, 2, 3, 4, 5를 차수 3 B+Tree에 삽입 — 리프 분열 시 separator를 COPY합니다",
     steps: [
       {
         label: "1, 2 삽입",
         description:
-          "루트 노드에 1, 2가 들어갑니다. 차수 3 B-Tree는 노드당 최대 2개의 키를 가집니다.",
+          "루트 노드(리프)에 1, 2가 들어갑니다. 차수 3 B+Tree는 노드당 최대 2개의 키를 가집니다.",
         insertingKey: 2,
-        nodes: [{ id: "root", keys: [1, 2], x: 300, y: 60, isLeaf: true }],
+        nodes: [{ id: "root", keys: [1, 2], x: 260, y: 80, isLeaf: true }],
         edges: [],
       },
       {
-        label: "3 삽입 → Split 발생",
+        label: "3 삽입 → Leaf Split (COPY)",
         description:
-          "3을 삽입하면 노드가 [1,2,3]이 돼 overflow. 중간값 2가 위로 올라가고 노드가 둘로 분열됩니다.",
+          "3을 삽입하면 리프가 [1,2,3] overflow. B+Tree는 중간값 2를 '복사(COPY)'해서 internal node로 올립니다. 2는 separator로도 존재하고, 오른쪽 리프 [2,3]에도 실제 데이터로 남습니다. B-Tree와 다른 점입니다.",
         insertingKey: 3,
         nodes: [
-          { id: "root", keys: [2], x: 300, y: 60, isLeaf: false },
-          {
-            id: "left",
-            keys: [1],
-            x: 160,
-            y: 160,
-            isLeaf: true,
-            isNew: true,
-          },
-          {
-            id: "right",
-            keys: [3],
-            x: 440,
-            y: 160,
-            isLeaf: true,
-            isNew: true,
-          },
+          { id: "root", keys: [2], x: 260, y: 60, isLeaf: false },
+          { id: "left", keys: [1], x: 80, y: 155, isLeaf: true, isNew: true },
+          { id: "right", keys: [2, 3], x: 400, y: 155, isLeaf: true, isNew: true },
         ],
         edges: [
           { from: "root", to: "left" },
@@ -72,53 +58,61 @@ const SCENARIOS: {
         ],
       },
       {
-        label: "4 삽입",
+        label: "4 삽입 → Leaf Split (COPY)",
         description:
-          "4는 루트의 2보다 크므로 오른쪽 리프(3)에 삽입됩니다. [3,4] — 아직 공간 있음.",
+          "4는 2보다 크므로 오른쪽 리프 [2,3]에 삽입 → [2,3,4] overflow. 중간값 3을 COPY해 루트가 [2,3]이 됩니다. 3은 새로운 오른쪽 리프에도 남습니다.",
         insertingKey: 4,
         nodes: [
-          { id: "root", keys: [2], x: 300, y: 60, isLeaf: false },
-          { id: "left", keys: [1], x: 160, y: 160, isLeaf: true },
-          { id: "right", keys: [3, 4], x: 440, y: 160, isLeaf: true },
-        ],
-        edges: [
-          { from: "root", to: "left" },
-          { from: "root", to: "right" },
-        ],
-      },
-      {
-        label: "5 삽입 → Split 연쇄",
-        description:
-          "5 삽입 시 오른쪽 리프가 overflow. 중간값 4가 루트로 올라가고 [3], [5]로 분열됩니다.",
-        insertingKey: 5,
-        nodes: [
-          { id: "root", keys: [2, 4], x: 300, y: 60, isLeaf: false },
-          { id: "n1", keys: [1], x: 100, y: 160, isLeaf: true },
-          { id: "n2", keys: [3], x: 300, y: 160, isLeaf: true, isNew: true },
-          { id: "n3", keys: [5], x: 500, y: 160, isLeaf: true, isNew: true },
+          { id: "root", keys: [2, 3], x: 220, y: 60, isLeaf: false },
+          { id: "n1", keys: [1], x: 40, y: 155, isLeaf: true },
+          { id: "n2", keys: [2], x: 190, y: 155, isLeaf: true, isNew: true },
+          { id: "n3", keys: [3, 4], x: 400, y: 155, isLeaf: true, isNew: true },
         ],
         edges: [
           { from: "root", to: "n1" },
           { from: "root", to: "n2" },
           { from: "root", to: "n3" },
+        ],
+      },
+      {
+        label: "5 삽입 → Root Split",
+        description:
+          "5가 [3,4]에 들어가 overflow → 4를 COPY해 루트로 올리면 루트가 [2,3,4] overflow. 루트를 분열할 땐 internal node 규칙이 적용돼 중간값 3이 MOVE(이동)됩니다. 리프는 4개, 트리가 3단계가 됩니다.",
+        insertingKey: 5,
+        nodes: [
+          { id: "root", keys: [3], x: 250, y: 15, isLeaf: false },
+          { id: "lb", keys: [2], x: 80, y: 105, isLeaf: false, isNew: true },
+          { id: "rb", keys: [4], x: 400, y: 105, isLeaf: false, isNew: true },
+          { id: "n1", keys: [1], x: 10, y: 185, isLeaf: true },
+          { id: "n2", keys: [2], x: 120, y: 185, isLeaf: true },
+          { id: "n3", keys: [3], x: 330, y: 185, isLeaf: true, isNew: true },
+          { id: "n4", keys: [4, 5], x: 450, y: 185, isLeaf: true, isNew: true },
+        ],
+        edges: [
+          { from: "root", to: "lb" },
+          { from: "root", to: "rb" },
+          { from: "lb", to: "n1" },
+          { from: "lb", to: "n2" },
+          { from: "rb", to: "n3" },
+          { from: "rb", to: "n4" },
         ],
       },
     ],
   },
   {
     title: "검색 경로 추적",
-    subtitle: "값 4를 검색할 때 Root → Branch → Leaf 순서로 내려갑니다",
+    subtitle: "값 4를 검색 — B+Tree에서 internal node의 키는 라우팅용 구분자, 실제 데이터는 항상 리프에만 있습니다",
     steps: [
       {
-        label: "루트에서 시작",
+        label: "루트 키는 구분자(separator)일 뿐",
         description:
-          "루트 노드의 키 [2, 4]와 비교합니다. 루트/Branch 노드는 거의 항상 Buffer Pool(메모리)에 상주합니다.",
+          "B+Tree internal node(루트/브랜치)의 키는 '실제 데이터'가 아니라 어느 서브트리로 내려갈지 안내하는 라우팅 구분자입니다. 루트에 4가 보여도, 실제 row는 리프로 내려가야 찾을 수 있습니다.",
         highlight: [],
         nodes: [
-          { id: "root", keys: [2, 4], x: 300, y: 60, isLeaf: false },
-          { id: "n1", keys: [1], x: 100, y: 160, isLeaf: true },
-          { id: "n2", keys: [3], x: 300, y: 160, isLeaf: true },
-          { id: "n3", keys: [5], x: 500, y: 160, isLeaf: true },
+          { id: "root", keys: [2, 4], x: 260, y: 60, isLeaf: false },
+          { id: "n1", keys: [1], x: 60, y: 160, isLeaf: true },
+          { id: "n2", keys: [2, 3], x: 240, y: 160, isLeaf: true },
+          { id: "n3", keys: [4, 5], x: 440, y: 160, isLeaf: true },
         ],
         edges: [
           { from: "root", to: "n1" },
@@ -127,22 +121,15 @@ const SCENARIOS: {
         ],
       },
       {
-        label: "4 ≤ 4 → 오른쪽으로",
+        label: "4 ≥ 4 → n3 포인터로 이동",
         description:
-          "찾는 값 4가 루트의 두 번째 키 4와 같거나 크면 세 번째 포인터를 따라 내려갑니다.",
+          "탐색값 4가 루트의 두 번째 구분자 4 이상이므로 세 번째 포인터(n3)를 따라 내려갑니다. 루트는 경로를 알려줄 뿐, 여기서 탐색이 끝나지 않습니다.",
         highlight: [4],
         nodes: [
-          {
-            id: "root",
-            keys: [2, 4],
-            x: 300,
-            y: 60,
-            isLeaf: false,
-            isSplitting: true,
-          },
-          { id: "n1", keys: [1], x: 100, y: 160, isLeaf: true },
-          { id: "n2", keys: [3], x: 300, y: 160, isLeaf: true },
-          { id: "n3", keys: [5], x: 500, y: 160, isLeaf: true },
+          { id: "root", keys: [2, 4], x: 260, y: 60, isLeaf: false, isSplitting: true },
+          { id: "n1", keys: [1], x: 60, y: 160, isLeaf: true },
+          { id: "n2", keys: [2, 3], x: 240, y: 160, isLeaf: true },
+          { id: "n3", keys: [4, 5], x: 440, y: 160, isLeaf: true },
         ],
         edges: [
           { from: "root", to: "n1" },
@@ -151,22 +138,15 @@ const SCENARIOS: {
         ],
       },
       {
-        label: "리프에서 발견!",
+        label: "리프 n3에서 4 발견",
         description:
-          "리프 노드 [5]에서 4를 찾지 못하고, 인접 리프를 확인합니다. B+Tree는 리프가 연결 리스트로 연결되어 있어 범위 탐색이 효율적입니다.",
+          "n3 리프 노드에서 실제 데이터 키 4를 찾았습니다. B+Tree는 실제 레코드(row)가 항상 리프에만 존재합니다. 리프들은 연결 리스트로 연결되어 있어 범위 탐색(4 이상 전체) 도 연속으로 스캔할 수 있습니다.",
         highlight: [4],
         nodes: [
-          { id: "root", keys: [2, 4], x: 300, y: 60, isLeaf: false },
-          { id: "n1", keys: [1], x: 100, y: 160, isLeaf: true },
-          { id: "n2", keys: [3], x: 300, y: 160, isLeaf: true },
-          {
-            id: "n3",
-            keys: [4, 5],
-            x: 500,
-            y: 160,
-            isLeaf: true,
-            isSplitting: true,
-          },
+          { id: "root", keys: [2, 4], x: 260, y: 60, isLeaf: false },
+          { id: "n1", keys: [1], x: 60, y: 160, isLeaf: true },
+          { id: "n2", keys: [2, 3], x: 240, y: 160, isLeaf: true },
+          { id: "n3", keys: [4, 5], x: 440, y: 160, isLeaf: true, isSplitting: true },
         ],
         edges: [
           { from: "root", to: "n1" },
@@ -229,7 +209,7 @@ export default function BTreeVisualizer() {
 
         {/* SVG canvas */}
         <div className="relative bg-black/20 rounded-xl border border-white/5 mb-6 overflow-hidden">
-          <svg width="100%" viewBox="0 0 600 240" className="block">
+          <svg width="100%" viewBox="0 0 600 250" className="block">
             {/* edges */}
             {step.edges.map((edge) => {
               const fromNode = step.nodes.find((n) => n.id === edge.from);
@@ -323,11 +303,11 @@ export default function BTreeVisualizer() {
                       x={NODE_W / 2}
                       y={NODE_H + 12}
                       textAnchor="middle"
-                      fill={node.isLeaf ? "rgba(161,161,170,0.5)" : "rgba(139,92,246,0.5)"}
+                      fill={node.isLeaf ? "rgba(161,161,170,0.4)" : "rgba(139,92,246,0.5)"}
                       fontSize={9}
                       fontFamily="monospace"
                     >
-                      {node.isLeaf ? "leaf" : "branch"}
+                      {node.isLeaf ? "leaf · 실제 데이터" : "separator · 라우팅만"}
                     </text>
                   </motion.g>
                 );

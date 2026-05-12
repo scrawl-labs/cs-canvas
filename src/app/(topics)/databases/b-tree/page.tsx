@@ -1,6 +1,8 @@
 import Link from "next/link";
 import BTreeVisualizer from "@/components/btree/BTreeVisualizer";
+import BTreeAsPages from "@/components/btree/BTreeAsPages";
 import IndexLookupFlow from "@/components/btree/IndexLookupFlow";
+import InnoDBInternals from "@/components/btree/InnoDBInternals";
 import IndexSARGable from "@/components/btree/IndexSARGable";
 import IndexESR from "@/components/btree/IndexESR";
 
@@ -61,8 +63,8 @@ export default function BTreePage() {
         {/* 01 */}
         <Section
           number="01"
-          title="B-Tree 구조 — 삽입과 분열"
-          description="차수 3 B-Tree에 값을 삽입합니다. 노드가 꽉 차면 중간값이 위로 올라가며 분열됩니다."
+          title="B+Tree 구조 — 삽입과 분열"
+          description="차수 3 B+Tree에 값을 삽입합니다. 리프 분열 시 separator를 COPY하므로 실제 데이터는 항상 리프에 남습니다. Internal node의 키는 라우팅용 구분자입니다."
         >
           <BTreeVisualizer />
         </Section>
@@ -70,13 +72,31 @@ export default function BTreePage() {
         {/* 02 */}
         <Section
           number="02"
+          title="DB에서의 B+Tree — 노드 = 페이지"
+          description="자료구조로서의 B+Tree를 DB가 실제로 구현할 때, 각 노드는 16KB 크기의 페이지(Page)에 매핑됩니다. 루트·브랜치 페이지는 Buffer Pool에 상주하고, 리프 페이지는 디스크에서 읽어 LRU 캐싱됩니다."
+        >
+          <BTreeAsPages />
+        </Section>
+
+        {/* 03 */}
+        <Section
+          number="03"
+          title="InnoDB 내부 구조 — Page · Record · Index"
+          description="InnoDB는 16KB 페이지 단위로 디스크를 읽습니다. Secondary Index leaf record는 (인덱스 컬럼 + PK)만 저장하는 직렬화된 byte 배열입니다. 필드명 없이 인덱스 스키마를 기준으로 파싱합니다."
+        >
+          <InnoDBInternals />
+        </Section>
+
+        {/* 04 */}
+        <Section
+          number="04"
           title="인덱스를 쓰면 내부에서 무슨 일이?"
           description="인덱스 B+Tree와 실제 데이터를 저장하는 Data B+Tree(클러스터드 인덱스)는 별개의 트리입니다. 인덱스 탐색 후 실제 row를 읽으러 가는 과정에서 Random I/O가 발생합니다. Root/Branch는 Buffer Pool에 항상 상주하지만, Leaf는 eviction 대상입니다."
         >
           <IndexLookupFlow />
         </Section>
 
-        {/* 02 bridge callout */}
+        {/* 04 bridge callout */}
         <div className="mb-16 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
           <p className="text-xs font-mono text-zinc-600 mb-3">이 구조를 알면 다음이 납득됩니다</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -91,7 +111,7 @@ export default function BTreePage() {
               },
               {
                 label: "왜 Covering이 빠른가?",
-                desc: "Data B+Tree 접근(Random I/O)을 아예 생략합니다. 인덱스 Leaf에서 끝나므로 디스크 왕복이 줄어듭니다.",
+                desc: "Clustered Index 접근(Random I/O)을 아예 생략합니다. Secondary Index Leaf에서 끝나므로 디스크 왕복이 줄어듭니다.",
               },
             ].map((item) => (
               <div key={item.label}>
@@ -102,29 +122,29 @@ export default function BTreePage() {
           </div>
         </div>
 
-        {/* 03 */}
+        {/* 05 */}
         <Section
-          number="03"
+          number="05"
           title="인덱스가 타는/안 타는 이유 (SARGable)"
           description="B+Tree 탐색은 '시작점'이 확정되어야 합니다. 컬럼에 함수, 앞 와일드카드, 타입 불일치가 있으면 시작점을 알 수 없어 Full Scan으로 빠집니다."
         >
           <IndexSARGable />
         </Section>
 
-        {/* 04 */}
+        {/* 06 */}
         <Section
-          number="04"
+          number="06"
           title="복합 인덱스 설계 — ESR 규칙"
           description="인덱스 B+Tree는 왼쪽 컬럼 기준으로 정렬됩니다. Equality(등치)로 먼저 서브트리를 좁히고, Sort로 정렬을 확보하고, Range는 마지막에 둬야 그 뒤 컬럼의 정렬이 유지됩니다."
         >
           <IndexESR />
         </Section>
 
-        {/* 05 */}
+        {/* 07 */}
         <Section
-          number="05"
+          number="07"
           title="Covering Index — Table Lookup 제거"
-          description="SELECT/WHERE에 필요한 컬럼이 인덱스 Leaf에 모두 있으면, Data B+Tree 접근 자체를 건너뜁니다. 02에서 본 Random I/O가 완전히 사라집니다."
+          description="SELECT/WHERE에 필요한 컬럼이 Secondary Index Leaf에 모두 있으면, Clustered Index 접근 자체를 건너뜁니다. Random I/O가 완전히 사라집니다."
         >
           <IndexLookupFlow initialMode="covering" showToggle={true} />
         </Section>
@@ -134,11 +154,13 @@ export default function BTreePage() {
           <h3 className="text-white font-semibold text-sm font-mono mb-5">한 줄 요약</h3>
           <div className="space-y-3">
             {[
-              { num: "01", text: "B+Tree는 왼쪽부터 정렬된 트리. 노드가 꽉 차면 중간값이 올라가며 분열." },
-              { num: "02", text: "인덱스 탐색 후 실제 row를 읽는 순간 Random I/O. Root/Branch는 메모리, Leaf는 Disk." },
-              { num: "03", text: "함수, 앞 와일드카드, 타입 불일치 → B+Tree 시작점 불가 → Full Scan." },
-              { num: "04", text: "복합 인덱스는 Equality → Sort → Range 순서. Range 이후 컬럼은 정렬 보장 안 됨." },
-              { num: "05", text: "모든 컬럼이 인덱스에 있으면 Table Lookup 없음 → Using index." },
+              { num: "01", text: "B+Tree는 왼쪽부터 정렬된 트리. 리프 분열 시 separator COPY — 실제 데이터는 항상 리프에만." },
+              { num: "02", text: "DB에서 각 B+Tree 노드 = 16KB 페이지. Root/Branch는 Buffer Pool 상주, Leaf는 Disk에서 LRU 캐싱." },
+              { num: "03", text: "InnoDB leaf record는 직렬화된 byte 배열. Secondary는 (인덱스 컬럼 + PK)만, Clustered는 모든 컬럼." },
+              { num: "04", text: "인덱스 → Clustered Index 접근 시 Random I/O 발생. Root/Branch는 메모리, Leaf는 Disk." },
+              { num: "05", text: "함수, 앞 와일드카드, 타입 불일치 → B+Tree 시작점 불가 → Full Scan." },
+              { num: "06", text: "복합 인덱스는 Equality → Sort → Range 순서. Range 이후 컬럼은 정렬 보장 안 됨." },
+              { num: "07", text: "SELECT 컬럼이 Secondary Index에 전부 있으면 Clustered Index 접근 생략 → Using index." },
             ].map((item) => (
               <div key={item.num} className="flex gap-3 items-start">
                 <span className="text-xs font-mono text-rose-500/50 shrink-0 mt-0.5">{item.num}</span>
