@@ -299,30 +299,30 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
         </div>
 
         {/* step info */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className={`text-xs font-mono ${cur.tagColor}`}>{cur.tag}</span>
-              <span className="text-white text-sm font-semibold">{cur.label}</span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`text-xs font-mono shrink-0 ${cur.tagColor}`}>{cur.tag}</span>
+              <span className="text-white text-sm font-semibold truncate">{cur.label}</span>
             </div>
-            <p className="text-zinc-400 text-xs leading-relaxed">{cur.description}</p>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setStep((s) => Math.max(0, s - 1))}
+                disabled={step === 0}
+                className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
+              >
+                ← prev
+              </button>
+              <button
+                onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
+                disabled={step === steps.length - 1}
+                className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
+              >
+                next →
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
-              className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
-            >
-              ← prev
-            </button>
-            <button
-              onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
-              disabled={step === steps.length - 1}
-              className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
-            >
-              next →
-            </button>
-          </div>
+          <p className="text-zinc-400 text-xs leading-relaxed">{cur.description}</p>
         </div>
 
         <div className="flex gap-1.5 mt-4">

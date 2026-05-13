@@ -317,40 +317,41 @@ export default function BTreeVisualizer() {
         </div>
 
         {/* step info */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono text-rose-400">
+        <div className="flex flex-col gap-3">
+          {/* top row: step counter + buttons */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-mono text-rose-400 shrink-0">
                 Step {stepIdx + 1}/{scenario.steps.length}
               </span>
-              <span className="text-white text-sm font-semibold">{step.label}</span>
+              <span className="text-white text-sm font-semibold truncate">{step.label}</span>
               {step.insertingKey !== undefined && (
-                <span className="text-xs font-mono bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded px-1.5 py-0.5">
+                <span className="text-xs font-mono bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded px-1.5 py-0.5 shrink-0">
                   insert {step.insertingKey}
                 </span>
               )}
             </div>
-            <p className="text-zinc-400 text-xs leading-relaxed max-w-lg">
-              {step.description}
-            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={goPrev}
+                disabled={stepIdx === 0}
+                className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-400 hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-mono"
+              >
+                ← prev
+              </button>
+              <button
+                onClick={goNext}
+                disabled={stepIdx === scenario.steps.length - 1}
+                className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-mono"
+              >
+                next →
+              </button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={goPrev}
-              disabled={stepIdx === 0}
-              className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-400 hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-mono"
-            >
-              ← prev
-            </button>
-            <button
-              onClick={goNext}
-              disabled={stepIdx === scenario.steps.length - 1}
-              className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-mono"
-            >
-              next →
-            </button>
-          </div>
+          {/* description */}
+          <p className="text-zinc-400 text-xs leading-relaxed">
+            {step.description}
+          </p>
         </div>
 
         {/* step dots */}
