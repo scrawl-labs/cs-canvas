@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Level = "RU" | "RC" | "RR" | "SER";
 type Anomaly = "dirty" | "nonRepeatable" | "phantom";
@@ -37,7 +38,7 @@ const LEVELS: LevelDef[] = [
     short: "RR",
     prevents: { dirty: true, nonRepeatable: true, phantom: true },
     cost: 3,
-    defaultIn: "MySQL InnoDB (Gap Lock으로 Phantom 방지)",
+    defaultIn: "MySQL InnoDB",
   },
   {
     id: "SER",
@@ -48,25 +49,26 @@ const LEVELS: LevelDef[] = [
   },
 ];
 
-const ANOMALIES: { id: Anomaly; label: string; desc: string }[] = [
-  { id: "dirty", label: "Dirty Read", desc: "미커밋 데이터 읽기" },
+const ANOMALIES: { id: Anomaly; label: string; desc: { ko: string; en: string } }[] = [
+  { id: "dirty", label: "Dirty Read", desc: { ko: "미커밋 데이터 읽기", en: "Reading uncommitted data" } },
   {
     id: "nonRepeatable",
     label: "Non-repeatable Read",
-    desc: "같은 row 재읽기 시 값 변경",
+    desc: { ko: "같은 row 재읽기 시 값 변경", en: "Value changes on re-read of same row" },
   },
-  { id: "phantom", label: "Phantom Read", desc: "같은 쿼리에 row 수 변화" },
+  { id: "phantom", label: "Phantom Read", desc: { ko: "같은 쿼리에 row 수 변화", en: "Row count changes on same query" } },
 ];
 
-const LEVEL_DESC: Record<Level, string> = {
-  RU: "락 없이 최신 값 읽음. 미커밋 데이터도 보임.",
-  RC: "커밋된 데이터만 읽음. SELECT마다 새 Read View 생성.",
-  RR: "트랜잭션 시작 시 Read View 1회 생성. MySQL은 갭락으로 Phantom까지 방지.",
-  SER: "모든 읽기에 공유락. 완전한 직렬화. 처리량이 가장 낮음.",
+const LEVEL_DESC: Record<Level, { ko: string; en: string }> = {
+  RU: { ko: "락 없이 최신 값 읽음. 미커밋 데이터도 보임.", en: "Reads the latest value without locks. Uncommitted data is visible." },
+  RC: { ko: "커밋된 데이터만 읽음. SELECT마다 새 Read View 생성.", en: "Reads only committed data. A new Read View is created for each SELECT." },
+  RR: { ko: "트랜잭션 시작 시 Read View 1회 생성. MySQL은 갭락으로 Phantom까지 방지.", en: "One Read View is created at transaction start. MySQL prevents Phantom Reads via Gap Locks." },
+  SER: { ko: "모든 읽기에 공유락. 완전한 직렬화. 처리량이 가장 낮음.", en: "Shared lock on all reads. Full serialization. Lowest throughput." },
 };
 
 export default function IsolationLevels() {
   const [selected, setSelected] = useState<Level>("RC");
+  const { lang } = useLanguage();
 
   const level = LEVELS.find((l) => l.id === selected)!;
 
@@ -103,7 +105,7 @@ export default function IsolationLevels() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex flex-col gap-2">
-          <p className="font-mono text-xs text-zinc-500 mb-1">이상현상 방지 여부</p>
+          <p className="font-mono text-xs text-zinc-500 mb-1">{lang === "ko" ? "이상현상 방지 여부" : "Anomaly Prevention"}</p>
           <AnimatePresence mode="wait">
             <motion.div
               key={selected}
@@ -124,7 +126,7 @@ export default function IsolationLevels() {
                       <span className="font-mono text-xs text-zinc-200">
                         {a.label}
                       </span>
-                      <span className="text-[11px] text-zinc-500">{a.desc}</span>
+                      <span className="text-[11px] text-zinc-500">{a.desc[lang]}</span>
                     </div>
                     <div
                       className={[
@@ -134,7 +136,7 @@ export default function IsolationLevels() {
                           : "bg-rose-500/15 text-rose-400",
                       ].join(" ")}
                     >
-                      <span>{prevented ? "방지" : "발생 가능"}</span>
+                      <span>{prevented ? (lang === "ko" ? "방지" : "Prevented") : (lang === "ko" ? "발생 가능" : "Possible")}</span>
                     </div>
                   </div>
                 );
@@ -153,22 +155,24 @@ export default function IsolationLevels() {
             className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex flex-col gap-4"
           >
             <div>
-              <p className="font-mono text-xs text-zinc-500 mb-1">구현 방식</p>
+              <p className="font-mono text-xs text-zinc-500 mb-1">{lang === "ko" ? "구현 방식" : "Implementation"}</p>
               <p className="font-mono text-sm font-semibold text-rose-300 mb-2">
                 {level.name}
               </p>
               {level.defaultIn && (
                 <p className="font-mono text-[11px] text-zinc-500 mb-3">
-                  기본값: {level.defaultIn}
+                  {lang === "ko" ? `기본값: ${level.defaultIn}` : `Default: ${level.defaultIn}`}
+                  {selected === "RR" && lang === "ko" && " (Gap Lock으로 Phantom 방지)"}
+                  {selected === "RR" && lang === "en" && " (Gap Lock prevents Phantom Reads)"}
                 </p>
               )}
               <p className="text-xs text-zinc-300 leading-relaxed">
-                {LEVEL_DESC[selected]}
+                {LEVEL_DESC[selected][lang]}
               </p>
             </div>
 
             <div>
-              <p className="font-mono text-xs text-zinc-500 mb-2">처리량 (상대적)</p>
+              <p className="font-mono text-xs text-zinc-500 mb-2">{lang === "ko" ? "처리량 (상대적)" : "Throughput (relative)"}</p>
               <div className="flex flex-col gap-1.5">
                 {LEVELS.map((l) => {
                   const isSelected = l.id === selected;
@@ -202,13 +206,9 @@ export default function IsolationLevels() {
                           isSelected ? "text-rose-400" : "text-zinc-600",
                         ].join(" ")}
                       >
-                        {throughput === 4
-                          ? "최고"
-                          : throughput === 3
-                            ? "높음"
-                            : throughput === 2
-                              ? "보통"
-                              : "낮음"}
+                        {lang === "ko"
+                          ? (throughput === 4 ? "최고" : throughput === 3 ? "높음" : throughput === 2 ? "보통" : "낮음")
+                          : (throughput === 4 ? "Highest" : throughput === 3 ? "High" : throughput === 2 ? "Medium" : "Low")}
                       </span>
                     </div>
                   );

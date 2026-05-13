@@ -2,6 +2,21 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const KO = {
+  backLink: "← cs-canvas",
+  comingSoon: "준비 중 — 시각화 작업 중입니다",
+  ready: "바로가기 →",
+  soon: "준비 중",
+};
+
+const EN = {
+  backLink: "← cs-canvas",
+  comingSoon: "Coming Soon — visualizations in progress",
+  ready: "ready →",
+  soon: "soon",
+};
 
 interface SubtopicItem {
   name: string;
@@ -24,6 +39,9 @@ export default function ComingSoonPage({
   description,
   subtopics,
 }: ComingSoonPageProps) {
+  const { lang } = useLanguage();
+  const t = lang === "ko" ? KO : EN;
+
   return (
     <div className="relative min-h-screen bg-grid-pattern">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(120,80,255,0.08),transparent)]" />
@@ -62,7 +80,7 @@ export default function ComingSoonPage({
           {/* coming soon badge */}
           <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-400">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Coming Soon — visualizations in progress
+            {t.comingSoon}
           </div>
         </motion.div>
 
@@ -87,7 +105,7 @@ export default function ComingSoonPage({
                           : "text-zinc-600 border-white/5 bg-white/[0.02]"
                       }`}
                     >
-                      {isReady ? "ready →" : "soon"}
+                      {isReady ? t.ready : t.soon}
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500 leading-relaxed">

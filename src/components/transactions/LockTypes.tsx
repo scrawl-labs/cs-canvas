@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Tab = "range" | "deadlock";
 type LockType = "row" | "gap" | "next-key";
@@ -39,6 +40,12 @@ const LOCK_CONFIGS: Record<LockType, LockConfig> = {
     overlay: { type: "next-key", from: 3, to: 4 },
     color: "violet",
   },
+};
+
+const LOCK_DESC: Record<LockType, { ko: string; en: string }> = {
+  row: { ko: "id=15 레코드 하나만 잠금. 삽입 차단 없음.", en: "Only record id=15 is locked. No insert blocking." },
+  gap: { ko: "15~20 사이 공간 잠금. 새 row 삽입 차단. 기존 레코드는 무관.", en: "Locks the gap between 15~20. Blocks new row inserts. Existing records are unaffected." },
+  "next-key": { ko: "10 < id ≤ 15 구간 전체 잠금. InnoDB RR 기본 동작.", en: "Locks the entire range 10 < id ≤ 15. InnoDB RR default behavior." },
 };
 
 const DEADLOCK_STEPS = [
@@ -111,6 +118,7 @@ function KeyBox({ label, highlight, color }: { label: string; highlight: boolean
 function LockRangeTab() {
   const [selected, setSelected] = useState<LockType>("row");
   const config = LOCK_CONFIGS[selected];
+  const { lang } = useLanguage();
 
   const isHighlighted = (index: number) => {
     const o = config.overlay;
@@ -153,7 +161,7 @@ function LockRangeTab() {
       </div>
 
       <div className="bg-white/[0.03] border border-white/10 rounded-lg p-4">
-        <p className="text-xs text-zinc-500 mb-1">쿼리 예시</p>
+        <p className="text-xs text-zinc-500 mb-1">{lang === "ko" ? "쿼리 예시" : "Query Example"}</p>
         <pre className="font-mono text-xs text-emerald-400">{config.query}</pre>
       </div>
 
@@ -190,7 +198,7 @@ function LockRangeTab() {
         {gap && config.color === "amber" && (
           <div className="mt-3 flex justify-center">
             <span className="text-xs text-amber-400 border border-amber-500/30 bg-amber-500/10 px-3 py-1 rounded font-mono">
-              새 row 삽입 차단
+              {lang === "ko" ? "새 row 삽입 차단" : "New row insert blocked"}
             </span>
           </div>
         )}
@@ -205,15 +213,16 @@ function LockRangeTab() {
           transition={{ duration: 0.25 }}
           className="text-sm text-zinc-400"
         >
-          {config.description}
+          {LOCK_DESC[selected][lang]}
         </motion.div>
       </AnimatePresence>
 
       <div className="border border-rose-500/30 bg-rose-500/[0.06] rounded-lg p-4">
-        <p className="text-xs font-mono text-rose-400 mb-1">주의</p>
+        <p className="text-xs font-mono text-rose-400 mb-1">{lang === "ko" ? "주의" : "Warning"}</p>
         <p className="text-xs text-zinc-400">
-          인덱스 없는 컬럼의 WHERE 조건으로 UPDATE/SELECT FOR UPDATE 시 → 전체 레코드 + 갭에 락 적용 → 사실상 테이블 락.
-          반드시 인덱스 컬럼을 사용할 것.
+          {lang === "ko"
+            ? "인덱스 없는 컬럼의 WHERE 조건으로 UPDATE/SELECT FOR UPDATE 시 → 전체 레코드 + 갭에 락 적용 → 사실상 테이블 락. 반드시 인덱스 컬럼을 사용할 것."
+            : "UPDATE/SELECT FOR UPDATE with a WHERE on a non-indexed column → locks applied to all records + gaps → effectively a table lock. Always use indexed columns."}
         </p>
       </div>
     </div>
@@ -223,6 +232,7 @@ function LockRangeTab() {
 function DeadlockTab() {
   const [step, setStep] = useState(0);
   const current = DEADLOCK_STEPS[step];
+  const { lang } = useLanguage();
 
   const statusStyle = (status: string) => {
     if (status === "acquired") return "border-violet-400 bg-violet-500/20 text-violet-300";
@@ -234,7 +244,9 @@ function DeadlockTab() {
   return (
     <div className="space-y-6">
       <div className="text-xs text-zinc-500 font-mono">
-        시나리오: T1이 row A(id=10) 락 후 row B(id=20) 대기, T2는 반대 순서 시도
+        {lang === "ko"
+          ? "시나리오: T1이 row A(id=10) 락 후 row B(id=20) 대기, T2는 반대 순서 시도"
+          : "Scenario: T1 locks row A(id=10) then waits for row B(id=20), T2 tries the reverse order"}
       </div>
 
       <div className="relative grid grid-cols-3 gap-4 items-start">
@@ -302,7 +314,7 @@ function DeadlockTab() {
             exit={{ opacity: 0 }}
             className="border border-rose-500 bg-rose-500/10 rounded-lg p-3 text-center font-mono text-sm text-rose-400"
           >
-            Deadlock Detected — InnoDB가 victim 선정 중
+            {lang === "ko" ? "Deadlock Detected — InnoDB가 victim 선정 중" : "Deadlock Detected — InnoDB is selecting a victim"}
           </motion.div>
         )}
         {current.banner === "resolved" && (
@@ -312,7 +324,7 @@ function DeadlockTab() {
             exit={{ opacity: 0 }}
             className="border border-emerald-500/50 bg-emerald-500/10 rounded-lg p-3 text-center font-mono text-sm text-emerald-400"
           >
-            T2 ROLLBACK 완료 (undo 더 적은 트랜잭션) — T1 계속 진행
+            {lang === "ko" ? "T2 ROLLBACK 완료 (undo 더 적은 트랜잭션) — T1 계속 진행" : "T2 ROLLBACK complete (transaction with fewer undo records) — T1 continues"}
           </motion.div>
         )}
       </AnimatePresence>
@@ -356,12 +368,13 @@ function DeadlockTab() {
 
 export default function LockTypes() {
   const [tab, setTab] = useState<Tab>("range");
+  const { lang } = useLanguage();
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="font-mono text-lg text-zinc-100">Lock Types</h2>
-        <p className="text-sm text-zinc-500 mt-1">Row / Gap / Next-Key Lock 범위와 Deadlock 시나리오</p>
+        <p className="text-sm text-zinc-500 mt-1">{lang === "ko" ? "Row / Gap / Next-Key Lock 범위와 Deadlock 시나리오" : "Row / Gap / Next-Key Lock ranges and Deadlock scenarios"}</p>
       </div>
 
       <div className="flex gap-1 border-b border-white/10 pb-0">
@@ -375,7 +388,7 @@ export default function LockTypes() {
                 : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            {t === "range" ? "락 범위" : "Deadlock"}
+            {t === "range" ? (lang === "ko" ? "락 범위" : "Lock Range") : "Deadlock"}
           </button>
         ))}
       </div>

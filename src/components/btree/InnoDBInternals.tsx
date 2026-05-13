@@ -2,120 +2,283 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Tab = "page" | "record" | "compare";
 
-// ── Page Structure Tab ──────────────────────────────────────────────────────
+const KO = {
+  tabs: [
+    ["page",    "Page 구조"],
+    ["record",  "Record 파싱"],
+    ["compare", "Secondary vs Clustered"],
+  ] as [Tab, string][],
 
-const PAGE_SECTIONS = [
-  { id: "header",   label: "Page Header",          sub: "체크섬, 페이지 번호, 타입 등 메타데이터",   h: 36, color: "rgba(99,102,241,0.15)",  border: "rgba(99,102,241,0.35)" },
-  { id: "infimum",  label: "Infimum",               sub: "하한 sentinel record",                        h: 28, color: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)" },
-  { id: "r1",       label: "Record 1  [kim@… | pk=3]",  sub: "→ next record",                           h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
-  { id: "r2",       label: "Record 2  [lee@… | pk=7]",  sub: "→ next record",                           h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
-  { id: "r3",       label: "Record 3  [park@… | pk=1]", sub: "→ Supremum",                              h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
-  { id: "supremum", label: "Supremum",              sub: "상한 sentinel record",                        h: 28, color: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)" },
-  { id: "free",     label: "Free Space",            sub: "새 record가 삽입될 공간",                     h: 44, color: "rgba(255,255,255,0.01)", border: "rgba(255,255,255,0.04)" },
-  { id: "dir",      label: "Page Directory",        sub: "페이지 내 binary search용 slot 배열 (4~8 records마다 1 slot)", h: 36, color: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.25)" },
-];
+  page: {
+    intro: "InnoDB는 디스크를 16KB 페이지 단위로 읽고 씁니다. B+Tree의 각 노드가 하나의 페이지입니다. 아래는 Secondary Index leaf page의 내부 구조입니다.",
+    intro16KB: "16KB 페이지",
+    diagramLabel: "16KB Page (Secondary Index Leaf)",
+    clickHint: "← 클릭하면 설명 표시",
+    keyPoints: "핵심 포인트",
+    pageDirRole: "Page Directory 역할",
+    pageDirDesc: "레코드 전체를 순차 스캔하지 않고, slot 배열로 페이지 내 binary search 가능 →",
+    notes: [
+      "기본 크기 16 KB — InnoDB의 최소 I/O 단위",
+      "Records는 물리 순서와 논리 순서가 다를 수 있음 (삽입/삭제 시 pointer만 조정)",
+      "Page Directory로 페이지 내에서도 O(log n) binary search 가능",
+    ],
+    sections: [
+      { id: "header",   label: "Page Header",          sub: "체크섬, 페이지 번호, 타입 등 메타데이터" },
+      { id: "infimum",  label: "Infimum",               sub: "하한 sentinel record" },
+      { id: "r1",       label: "Record 1  [kim@… | pk=3]",  sub: "→ next record" },
+      { id: "r2",       label: "Record 2  [lee@… | pk=7]",  sub: "→ next record" },
+      { id: "r3",       label: "Record 3  [park@… | pk=1]", sub: "→ Supremum" },
+      { id: "supremum", label: "Supremum",              sub: "상한 sentinel record" },
+      { id: "free",     label: "Free Space",            sub: "새 record가 삽입될 공간" },
+      { id: "dir",      label: "Page Directory",        sub: "페이지 내 binary search용 slot 배열 (4~8 records마다 1 slot)" },
+    ],
+  },
 
-const PAGE_NOTES = [
-  "기본 크기 16 KB — InnoDB의 최소 I/O 단위",
-  "Records는 물리 순서와 논리 순서가 다를 수 있음 (삽입/삭제 시 pointer만 조정)",
-  "Page Directory로 페이지 내에서도 O(log n) binary search 가능",
-];
+  record: {
+    intro: "Secondary Index의 leaf record는 Map이 아니라 직렬화된 연속 바이트 배열(C struct)입니다. 필드명 없이 값만 저장되며, InnoDB가 스키마를 알기 때문에 파싱할 수 있습니다.",
+    introHighlight: "직렬화된 연속 바이트 배열(C struct)",
+    pointerLabel: "Record 구조 — pointer가 중간을 가리킴",
+    headerLeft: "← 역방향으로 읽음 (header)",
+    dataRight: "정방향으로 읽음 (data) →",
+    headerFields: [
+      { label: "가변길이 목록", note: "VARCHAR 컬럼마다 실제 길이 기록" },
+      { label: "NULL 비트맵",   note: "nullable 컬럼 수 ÷ 8 바이트" },
+      { label: "고정 헤더 5B",  note: "next record pointer 등 포함" },
+    ],
+    dataFields: [
+      { label: "email 값",  note: "인덱스 컬럼" },
+      { label: "pk(id) 값", note: "Primary Key" },
+    ],
+    box1Title: "Self-describing format이 아님",
+    box1Body: "record 자체에 \"여기까지가 헤더\"라는 표시가 없습니다. InnoDB가 인덱스 스키마(데이터 딕셔너리)를 이미 알기 때문에 VARCHAR 길이, NULL 컬럼 수를 계산해 파싱합니다.",
+    box1Highlight: "인덱스 스키마(데이터 딕셔너리)",
+    box2Title: "인덱스 스키마 기준으로 파싱",
+    box2Body: "테이블에 VARCHAR 컬럼이 3개여도, Secondary Index에 1개만 있으면 가변길이 목록엔 1개 엔트리만 들어갑니다. 파싱 기준은 테이블 스키마가 아닌 인덱스 스키마입니다.",
+    box2Highlight: "테이블 스키마가 아닌 인덱스 스키마",
+    structLabel: "개념적으로 이런 C struct",
+  },
 
-// ── Record Format Tab ───────────────────────────────────────────────────────
+  compare: {
+    intro: "같은 테이블이라도 Secondary Index leaf와 Clustered Index leaf에 저장되는 내용이 다릅니다.",
+    flowLabel: "조회 흐름",
+    modeLabel: "모드:",
+    coveringBtn: "Covering Index",
+    nonCoveringBtn: "Non-Covering",
+    colSatisfied: "컬럼 충족",
+    colInsufficient: "컬럼 부족",
+    coveringEnd: "끝 — Using index",
+    coveringIO: "I/O 1회",
+    coveringNoRandom: "Random I/O 없음",
+    randomIO: "Random I/O",
+    randomIOSub: "PK로 Clustered Index",
+    randomIOSub2: "다른 페이지 위치",
+    clusteredEnd: "Clustered Index",
+    clusteredSub: "leaf: 모든 컬럼",
+    clusteredIO: "I/O 2회+",
+    indexTypes: [
+      {
+        name: "Secondary Index",
+        sub: "보조 인덱스 (idx_email)",
+        fields: [
+          { label: "email", note: "인덱스 컬럼", highlight: true },
+          { label: "id (PK)", note: "Clustered Index를 찾기 위한 포인터", highlight: true },
+        ],
+      },
+      {
+        name: "Clustered Index",
+        sub: "기본 인덱스 (PRIMARY)",
+        fields: [
+          { label: "id", note: "PK" },
+          { label: "email", note: "모든 컬럼" },
+          { label: "name", note: "모든 컬럼" },
+          { label: "bio", note: "모든 컬럼" },
+          { label: "age", note: "모든 컬럼" },
+        ],
+      },
+    ],
+  },
+};
 
-interface ByteField {
+const EN = {
+  tabs: [
+    ["page",    "Page Structure"],
+    ["record",  "Record Parsing"],
+    ["compare", "Secondary vs Clustered"],
+  ] as [Tab, string][],
+
+  page: {
+    intro: "InnoDB reads and writes disk in units of 16KB pages. Each node of the B+Tree is one page. Below is the internal structure of a Secondary Index leaf page.",
+    intro16KB: "16KB pages",
+    diagramLabel: "16KB Page (Secondary Index Leaf)",
+    clickHint: "← click to expand",
+    keyPoints: "Key Points",
+    pageDirRole: "Page Directory Role",
+    pageDirDesc: "Instead of scanning all records sequentially, slot arrays enable binary search within a page →",
+    notes: [
+      "Default size 16 KB — minimum I/O unit in InnoDB",
+      "Physical and logical order of records may differ (only pointers are adjusted on insert/delete)",
+      "Page Directory enables O(log n) binary search even within a page",
+    ],
+    sections: [
+      { id: "header",   label: "Page Header",          sub: "Checksum, page number, type, and other metadata" },
+      { id: "infimum",  label: "Infimum",               sub: "Lower-bound sentinel record" },
+      { id: "r1",       label: "Record 1  [kim@… | pk=3]",  sub: "→ next record" },
+      { id: "r2",       label: "Record 2  [lee@… | pk=7]",  sub: "→ next record" },
+      { id: "r3",       label: "Record 3  [park@… | pk=1]", sub: "→ Supremum" },
+      { id: "supremum", label: "Supremum",              sub: "Upper-bound sentinel record" },
+      { id: "free",     label: "Free Space",            sub: "Space where new records will be inserted" },
+      { id: "dir",      label: "Page Directory",        sub: "Slot array for in-page binary search (1 slot per 4–8 records)" },
+    ],
+  },
+
+  record: {
+    intro: "A Secondary Index leaf record is not a Map — it is a serialized contiguous byte array (C struct). Only values are stored without field names; InnoDB can parse it because it knows the schema.",
+    introHighlight: "serialized contiguous byte array (C struct)",
+    pointerLabel: "Record layout — pointer points to the middle",
+    headerLeft: "← read backwards (header)",
+    dataRight: "read forwards (data) →",
+    headerFields: [
+      { label: "Variable-length list", note: "Stores actual length per VARCHAR column" },
+      { label: "NULL bitmap",          note: "nullable columns ÷ 8 bytes" },
+      { label: "Fixed header 5B",      note: "Includes next record pointer, etc." },
+    ],
+    dataFields: [
+      { label: "email value",  note: "index column" },
+      { label: "pk(id) value", note: "Primary Key" },
+    ],
+    box1Title: "Not a self-describing format",
+    box1Body: "There is no marker in the record itself indicating where the header ends. InnoDB already knows the index schema (data dictionary) so it calculates VARCHAR lengths and NULL column counts to parse.",
+    box1Highlight: "index schema (data dictionary)",
+    box2Title: "Parsed according to index schema",
+    box2Body: "Even if the table has 3 VARCHAR columns, if only 1 is in the Secondary Index, the variable-length list has only 1 entry. The parsing basis is the index schema, not the table schema.",
+    box2Highlight: "index schema, not the table schema",
+    structLabel: "Conceptual C struct equivalent",
+  },
+
+  compare: {
+    intro: "Even for the same table, the content stored in Secondary Index leaf vs. Clustered Index leaf differs.",
+    flowLabel: "Query Flow",
+    modeLabel: "Mode:",
+    coveringBtn: "Covering Index",
+    nonCoveringBtn: "Non-Covering",
+    colSatisfied: "columns satisfied",
+    colInsufficient: "columns insufficient",
+    coveringEnd: "Done — Using index",
+    coveringIO: "1 I/O",
+    coveringNoRandom: "No random I/O",
+    randomIO: "Random I/O",
+    randomIOSub: "Clustered Index via PK",
+    randomIOSub2: "different page location",
+    clusteredEnd: "Clustered Index",
+    clusteredSub: "leaf: all columns",
+    clusteredIO: "2+ I/Os",
+    indexTypes: [
+      {
+        name: "Secondary Index",
+        sub: "Secondary index (idx_email)",
+        fields: [
+          { label: "email", note: "index column", highlight: true },
+          { label: "id (PK)", note: "Pointer to find Clustered Index", highlight: true },
+        ],
+      },
+      {
+        name: "Clustered Index",
+        sub: "Primary index (PRIMARY)",
+        fields: [
+          { label: "id", note: "PK" },
+          { label: "email", note: "all columns" },
+          { label: "name", note: "all columns" },
+          { label: "bio", note: "all columns" },
+          { label: "age", note: "all columns" },
+        ],
+      },
+    ],
+  },
+};
+
+interface IndexField {
   label: string;
-  width: number; // relative flex units
-  color: string;
-  border: string;
-  dir: "left" | "right";
-  note?: string;
+  note: string;
+  highlight?: boolean;
 }
 
-const HEADER_FIELDS: ByteField[] = [
-  { label: "가변길이 목록", width: 3, color: "rgba(99,102,241,0.15)",  border: "rgba(99,102,241,0.4)",  dir: "left",  note: "VARCHAR 컬럼마다 실제 길이 기록" },
-  { label: "NULL 비트맵",   width: 2, color: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)",  dir: "left",  note: "nullable 컬럼 수 ÷ 8 바이트" },
-  { label: "고정 헤더 5B",  width: 2, color: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.4)",  dir: "left",  note: "next record pointer 등 포함" },
-];
-
-const DATA_FIELDS: ByteField[] = [
-  { label: "email 값",  width: 3, color: "rgba(244,63,94,0.12)",  border: "rgba(244,63,94,0.35)",  dir: "right", note: "인덱스 컬럼" },
-  { label: "pk(id) 값", width: 2, color: "rgba(52,211,153,0.12)", border: "rgba(52,211,153,0.35)", dir: "right", note: "Primary Key" },
-];
-
-// ── Secondary vs Clustered Tab ──────────────────────────────────────────────
-
-interface IndexType {
+interface IndexTypeEntry {
   name: string;
   sub: string;
-  fields: { label: string; note: string; highlight?: boolean }[];
+  fields: IndexField[];
   color: string;
   border: string;
 }
 
-const INDEX_TYPES: IndexType[] = [
-  {
-    name: "Secondary Index",
-    sub: "보조 인덱스 (idx_email)",
-    color: "rgba(244,63,94,0.08)",
-    border: "rgba(244,63,94,0.3)",
-    fields: [
-      { label: "email", note: "인덱스 컬럼", highlight: true },
-      { label: "id (PK)", note: "Clustered Index를 찾기 위한 포인터", highlight: true },
-    ],
-  },
-  {
-    name: "Clustered Index",
-    sub: "기본 인덱스 (PRIMARY)",
-    color: "rgba(52,211,153,0.06)",
-    border: "rgba(52,211,153,0.25)",
-    fields: [
-      { label: "id", note: "PK" },
-      { label: "email", note: "모든 컬럼" },
-      { label: "name", note: "모든 컬럼" },
-      { label: "bio", note: "모든 컬럼" },
-      { label: "age", note: "모든 컬럼" },
-    ],
-  },
+const INDEX_COLORS = [
+  { color: "rgba(244,63,94,0.08)", border: "rgba(244,63,94,0.3)" },
+  { color: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.25)" },
 ];
 
-const FLOW_STEPS = [
-  {
-    label: "Secondary Index 탐색",
-    sub: "leaf record: [email | pk]",
-    color: "border-rose-500/30 bg-rose-500/5 text-rose-400",
-  },
-  {
-    label: "Covering?",
-    sub: "SELECT 컬럼이 인덱스에 전부 있는가",
-    color: "border-amber-500/30 bg-amber-500/5 text-amber-400",
-  },
+const PAGE_SECTION_STYLES = [
+  { h: 36, color: "rgba(99,102,241,0.15)",  border: "rgba(99,102,241,0.35)" },
+  { h: 28, color: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)" },
+  { h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
+  { h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
+  { h: 34, color: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.25)",  record: true },
+  { h: 28, color: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)" },
+  { h: 44, color: "rgba(255,255,255,0.01)", border: "rgba(255,255,255,0.04)" },
+  { h: 36, color: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.25)" },
 ];
 
-// ── Component ───────────────────────────────────────────────────────────────
+const HEADER_FIELD_STYLES = [
+  { width: 3, color: "rgba(99,102,241,0.15)",  border: "rgba(99,102,241,0.4)",  dir: "left"  as const },
+  { width: 2, color: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)",  dir: "left"  as const },
+  { width: 2, color: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.4)",  dir: "left"  as const },
+];
+
+const DATA_FIELD_STYLES = [
+  { width: 3, color: "rgba(244,63,94,0.12)",  border: "rgba(244,63,94,0.35)",  dir: "right" as const },
+  { width: 2, color: "rgba(52,211,153,0.12)", border: "rgba(52,211,153,0.35)", dir: "right" as const },
+];
 
 export default function InnoDBInternals() {
+  const { lang } = useLanguage();
+  const t = lang === "ko" ? KO : EN;
+
   const [tab, setTab] = useState<Tab>("page");
   const [activeRecord, setActiveRecord] = useState<string | null>(null);
   const [showCovering, setShowCovering] = useState(true);
+
+  const pageSections = t.page.sections.map((sec, i) => ({
+    ...sec,
+    ...PAGE_SECTION_STYLES[i],
+  }));
+
+  const headerFields = t.record.headerFields.map((f, i) => ({
+    ...f,
+    ...HEADER_FIELD_STYLES[i],
+  }));
+
+  const dataFields = t.record.dataFields.map((f, i) => ({
+    ...f,
+    ...DATA_FIELD_STYLES[i],
+  }));
+
+  const indexTypes: IndexTypeEntry[] = t.compare.indexTypes.map((idx, i) => ({
+    ...idx,
+    ...INDEX_COLORS[i],
+  }));
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
       {/* tabs */}
       <div className="flex border-b border-white/10">
-        {([
-          ["page",    "Page 구조"],
-          ["record",  "Record 파싱"],
-          ["compare", "Secondary vs Clustered"],
-        ] as [Tab, string][]).map(([t, label]) => (
+        {t.tabs.map(([tabKey, label]) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`px-4 py-2.5 text-xs font-mono transition-colors ${
-              tab === t
+              tab === tabKey
                 ? "text-white border-b-2 border-rose-500 bg-white/[0.04]"
                 : "text-zinc-500 hover:text-zinc-300"
             }`}
@@ -136,16 +299,26 @@ export default function InnoDBInternals() {
             className="p-6"
           >
             <p className="text-xs text-zinc-500 mb-5 leading-relaxed">
-              InnoDB는 디스크를 <span className="text-zinc-300">16KB 페이지</span> 단위로 읽고 씁니다.
-              B+Tree의 각 노드가 하나의 페이지입니다. 아래는 Secondary Index leaf page의 내부 구조입니다.
+              {lang === "ko" ? (
+                <>
+                  InnoDB는 디스크를 <span className="text-zinc-300">{t.page.intro16KB}</span> 단위로 읽고 씁니다.
+                  B+Tree의 각 노드가 하나의 페이지입니다. 아래는 Secondary Index leaf page의 내부 구조입니다.
+                </>
+              ) : (
+                <>
+                  InnoDB reads and writes disk in units of{" "}
+                  <span className="text-zinc-300">{t.page.intro16KB}</span>.
+                  Each node of the B+Tree is one page. Below is the internal structure of a Secondary Index leaf page.
+                </>
+              )}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6">
               {/* page diagram */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-mono text-zinc-600 mb-2">16KB Page (Secondary Index Leaf)</p>
+                <p className="text-xs font-mono text-zinc-600 mb-2">{t.page.diagramLabel}</p>
                 <div className="rounded-lg border border-white/10 overflow-hidden">
-                  {PAGE_SECTIONS.map((sec) => (
+                  {pageSections.map((sec) => (
                     <button
                       key={sec.id}
                       onClick={() => setActiveRecord(activeRecord === sec.id ? null : sec.id)}
@@ -170,19 +343,19 @@ export default function InnoDBInternals() {
                           <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed whitespace-normal">{sec.sub}</p>
                         )}
                       </div>
-                      {sec.record && (
+                      {"record" in sec && sec.record && (
                         <span className="text-xs font-mono text-rose-400/60 shrink-0">→</span>
                       )}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-zinc-700 font-mono mt-2">← 클릭하면 설명 표시</p>
+                <p className="text-xs text-zinc-700 font-mono mt-2">{t.page.clickHint}</p>
               </div>
 
               {/* notes */}
               <div className="w-full sm:w-56 sm:shrink-0 space-y-3">
-                <p className="text-xs font-mono text-zinc-600 mb-2">핵심 포인트</p>
-                {PAGE_NOTES.map((note, i) => (
+                <p className="text-xs font-mono text-zinc-600 mb-2">{t.page.keyPoints}</p>
+                {t.page.notes.map((note, i) => (
                   <div key={i} className="flex gap-2">
                     <span className="text-xs font-mono text-rose-500/50 shrink-0 mt-0.5">{i + 1}</span>
                     <p className="text-xs text-zinc-400 leading-relaxed">{note}</p>
@@ -190,11 +363,10 @@ export default function InnoDBInternals() {
                 ))}
 
                 <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs font-mono text-zinc-600 mb-2">Page Directory 역할</p>
+                  <p className="text-xs font-mono text-zinc-600 mb-2">{t.page.pageDirRole}</p>
                   <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      레코드 전체를 순차 스캔하지 않고,
-                      slot 배열로 페이지 내 binary search 가능 →
+                      {t.page.pageDirDesc}
                       <span className="text-emerald-400"> O(log n)</span>
                     </p>
                   </div>
@@ -213,19 +385,29 @@ export default function InnoDBInternals() {
             className="p-6"
           >
             <p className="text-xs text-zinc-500 mb-6 leading-relaxed">
-              Secondary Index의 leaf record는 Map이 아니라{" "}
-              <span className="text-zinc-300">직렬화된 연속 바이트 배열(C struct)</span>입니다.
-              필드명 없이 값만 저장되며, InnoDB가 스키마를 알기 때문에 파싱할 수 있습니다.
+              {lang === "ko" ? (
+                <>
+                  Secondary Index의 leaf record는 Map이 아니라{" "}
+                  <span className="text-zinc-300">{t.record.introHighlight}</span>입니다.
+                  필드명 없이 값만 저장되며, InnoDB가 스키마를 알기 때문에 파싱할 수 있습니다.
+                </>
+              ) : (
+                <>
+                  A Secondary Index leaf record is not a Map — it is a{" "}
+                  <span className="text-zinc-300">{t.record.introHighlight}</span>.
+                  Only values are stored without field names; InnoDB can parse it because it knows the schema.
+                </>
+              )}
             </p>
 
             {/* record pointer diagram */}
             <div className="mb-6">
-              <p className="text-xs font-mono text-zinc-600 mb-3">Record 구조 — pointer가 중간을 가리킴</p>
+              <p className="text-xs font-mono text-zinc-600 mb-3">{t.record.pointerLabel}</p>
               <div className="rounded-xl border border-white/10 bg-black/20 p-5 overflow-x-auto">
                 <div className="flex items-stretch min-w-[480px]">
                   {/* header (left, read backwards) */}
                   <div className="flex flex-row-reverse gap-1 flex-1">
-                    {HEADER_FIELDS.map((f) => (
+                    {headerFields.map((f) => (
                       <div
                         key={f.label}
                         className="rounded-lg border px-2 py-2 text-center flex-1"
@@ -246,7 +428,7 @@ export default function InnoDBInternals() {
 
                   {/* data (right, read forwards) */}
                   <div className="flex gap-1 flex-1">
-                    {DATA_FIELDS.map((f) => (
+                    {dataFields.map((f) => (
                       <div
                         key={f.label}
                         className="rounded-lg border px-2 py-2 text-center flex-1"
@@ -261,9 +443,9 @@ export default function InnoDBInternals() {
 
                 {/* direction arrows */}
                 <div className="flex mt-2 min-w-[480px]">
-                  <div className="flex-1 text-center text-[10px] text-zinc-700 font-mono">← 역방향으로 읽음 (header)</div>
+                  <div className="flex-1 text-center text-[10px] text-zinc-700 font-mono">{t.record.headerLeft}</div>
                   <div className="w-8 shrink-0" />
-                  <div className="flex-1 text-center text-[10px] text-zinc-700 font-mono">정방향으로 읽음 (data) →</div>
+                  <div className="flex-1 text-center text-[10px] text-zinc-700 font-mono">{t.record.dataRight}</div>
                 </div>
               </div>
             </div>
@@ -271,26 +453,47 @@ export default function InnoDBInternals() {
             {/* key insight */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <p className="text-xs font-semibold text-amber-300 mb-2">Self-describing format이 아님</p>
+                <p className="text-xs font-semibold text-amber-300 mb-2">{t.record.box1Title}</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  record 자체에 &quot;여기까지가 헤더&quot;라는 표시가 없습니다.
-                  InnoDB가 <span className="text-zinc-300">인덱스 스키마(데이터 딕셔너리)</span>를 이미 알기 때문에
-                  VARCHAR 길이, NULL 컬럼 수를 계산해 파싱합니다.
+                  {lang === "ko" ? (
+                    <>
+                      record 자체에 &quot;여기까지가 헤더&quot;라는 표시가 없습니다.
+                      InnoDB가 <span className="text-zinc-300">{t.record.box1Highlight}</span>를 이미 알기 때문에
+                      VARCHAR 길이, NULL 컬럼 수를 계산해 파싱합니다.
+                    </>
+                  ) : (
+                    <>
+                      There is no marker in the record itself indicating where the header ends.
+                      InnoDB already knows the{" "}
+                      <span className="text-zinc-300">{t.record.box1Highlight}</span> so it calculates
+                      VARCHAR lengths and NULL column counts to parse.
+                    </>
+                  )}
                 </p>
               </div>
               <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
-                <p className="text-xs font-semibold text-violet-300 mb-2">인덱스 스키마 기준으로 파싱</p>
+                <p className="text-xs font-semibold text-violet-300 mb-2">{t.record.box2Title}</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  테이블에 VARCHAR 컬럼이 3개여도,
-                  Secondary Index에 1개만 있으면 가변길이 목록엔 1개 엔트리만 들어갑니다.
-                  파싱 기준은 <span className="text-zinc-300">테이블 스키마가 아닌 인덱스 스키마</span>입니다.
+                  {lang === "ko" ? (
+                    <>
+                      테이블에 VARCHAR 컬럼이 3개여도,
+                      Secondary Index에 1개만 있으면 가변길이 목록엔 1개 엔트리만 들어갑니다.
+                      파싱 기준은 <span className="text-zinc-300">{t.record.box2Highlight}</span>입니다.
+                    </>
+                  ) : (
+                    <>
+                      Even if the table has 3 VARCHAR columns, if only 1 is in the Secondary Index,
+                      the variable-length list has only 1 entry. The parsing basis is the{" "}
+                      <span className="text-zinc-300">{t.record.box2Highlight}</span>.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
 
             {/* struct equivalent */}
             <div className="mt-4">
-              <p className="text-xs font-mono text-zinc-600 mb-2">개념적으로 이런 C struct</p>
+              <p className="text-xs font-mono text-zinc-600 mb-2">{t.record.structLabel}</p>
               <div className="rounded-lg border border-white/10 bg-black/30 p-4 font-mono text-xs text-zinc-300 leading-relaxed">
                 <pre>{`struct SecondaryIndexRecord {
   RecordHeader header;   // 고정 5B + NULL bitmap + 가변길이 목록
@@ -311,12 +514,12 @@ export default function InnoDBInternals() {
             className="p-6"
           >
             <p className="text-xs text-zinc-500 mb-6 leading-relaxed">
-              같은 테이블이라도 Secondary Index leaf와 Clustered Index leaf에 저장되는 내용이 다릅니다.
+              {t.compare.intro}
             </p>
 
             {/* index leaf comparison */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {INDEX_TYPES.map((idx) => (
+              {indexTypes.map((idx) => (
                 <div
                   key={idx.name}
                   className="rounded-xl border p-4"
@@ -347,20 +550,20 @@ export default function InnoDBInternals() {
 
             {/* query flow */}
             <div>
-              <p className="text-xs font-mono text-zinc-600 mb-3">조회 흐름</p>
+              <p className="text-xs font-mono text-zinc-600 mb-3">{t.compare.flowLabel}</p>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-zinc-600 font-mono">모드:</span>
+                <span className="text-xs text-zinc-600 font-mono">{t.compare.modeLabel}</span>
                 <button
                   onClick={() => setShowCovering(true)}
                   className={`px-2 py-1 rounded text-xs font-mono transition-colors ${showCovering ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-zinc-500 border border-white/10"}`}
                 >
-                  Covering Index
+                  {t.compare.coveringBtn}
                 </button>
                 <button
                   onClick={() => setShowCovering(false)}
                   className={`px-2 py-1 rounded text-xs font-mono transition-colors ${!showCovering ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "text-zinc-500 border border-white/10"}`}
                 >
-                  Non-Covering
+                  {t.compare.nonCoveringBtn}
                 </button>
               </div>
 
@@ -375,28 +578,28 @@ export default function InnoDBInternals() {
                 <div className="flex flex-col items-center justify-center self-center">
                   <span className="text-zinc-600 text-sm">→</span>
                   <span className="text-[10px] text-zinc-700 font-mono">
-                    {showCovering ? "컬럼 충족" : "컬럼 부족"}
+                    {showCovering ? t.compare.colSatisfied : t.compare.colInsufficient}
                   </span>
                 </div>
 
                 {showCovering ? (
                   <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs font-mono">
-                    <p className="text-emerald-400 font-semibold">끝 — Using index</p>
-                    <p className="text-zinc-500 mt-0.5">I/O 1회</p>
-                    <p className="text-zinc-600 mt-0.5">Random I/O 없음</p>
+                    <p className="text-emerald-400 font-semibold">{t.compare.coveringEnd}</p>
+                    <p className="text-zinc-500 mt-0.5">{t.compare.coveringIO}</p>
+                    <p className="text-zinc-600 mt-0.5">{t.compare.coveringNoRandom}</p>
                   </div>
                 ) : (
                   <>
                     <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs font-mono">
-                      <p className="text-amber-400 font-semibold">Random I/O</p>
-                      <p className="text-zinc-500 mt-0.5">PK로 Clustered Index</p>
-                      <p className="text-zinc-600 mt-0.5">다른 페이지 위치</p>
+                      <p className="text-amber-400 font-semibold">{t.compare.randomIO}</p>
+                      <p className="text-zinc-500 mt-0.5">{t.compare.randomIOSub}</p>
+                      <p className="text-zinc-600 mt-0.5">{t.compare.randomIOSub2}</p>
                     </div>
                     <span className="text-zinc-600 text-sm self-center">→</span>
                     <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs font-mono">
-                      <p className="text-emerald-400 font-semibold">Clustered Index</p>
-                      <p className="text-zinc-500 mt-0.5">leaf: 모든 컬럼</p>
-                      <p className="text-zinc-600 mt-0.5">I/O 2회+</p>
+                      <p className="text-emerald-400 font-semibold">{t.compare.clusteredEnd}</p>
+                      <p className="text-zinc-500 mt-0.5">{t.compare.clusteredSub}</p>
+                      <p className="text-zinc-600 mt-0.5">{t.compare.clusteredIO}</p>
                     </div>
                   </>
                 )}

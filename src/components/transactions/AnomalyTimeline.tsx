@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Actor = "T1" | "T2" | "both";
 
@@ -9,15 +10,15 @@ interface Step {
   actor: Actor;
   t1Sql: string | null;
   t2Sql: string | null;
-  t1View: string;
+  t1View: { ko: string; en: string };
   isAnomaly: boolean;
-  note: string;
+  note: { ko: string; en: string };
 }
 
 interface Scenario {
   id: string;
   label: string;
-  conclusion: string;
+  conclusion: { ko: string; en: string };
   steps: Step[];
 }
 
@@ -25,104 +26,110 @@ const SCENARIOS: Scenario[] = [
   {
     id: "dirty-read",
     label: "Dirty Read",
-    conclusion:
-      'T1이 읽은 500은 실제로 존재하지 않았던 값. "Dirty = 더러운(미커밋) 데이터"',
+    conclusion: {
+      ko: 'T1이 읽은 500은 실제로 존재하지 않았던 값. "Dirty = 더러운(미커밋) 데이터"',
+      en: 'The 500 T1 read never actually existed. "Dirty = dirty (uncommitted) data"',
+    },
     steps: [
       {
         actor: "T1",
         t1Sql: "BEGIN",
         t2Sql: null,
-        t1View: "balance = 1000",
+        t1View: { ko: "balance = 1000", en: "balance = 1000" },
         isAnomaly: false,
-        note: "T1 트랜잭션 시작. 현재 잔액 1000.",
+        note: { ko: "T1 트랜잭션 시작. 현재 잔액 1000.", en: "T1 transaction starts. Current balance is 1000." },
       },
       {
         actor: "T2",
         t1Sql: null,
-        t2Sql: "BEGIN\nUPDATE accounts\n  SET balance = 500\n  WHERE id = 1\n-- 미커밋",
-        t1View: "(아직 읽기 전)",
+        t2Sql: "BEGIN\nUPDATE accounts\n  SET balance = 500\n  WHERE id = 1\n-- uncommitted",
+        t1View: { ko: "(아직 읽기 전)", en: "(not yet read)" },
         isAnomaly: false,
-        note: "T2가 balance를 500으로 수정했지만 아직 커밋하지 않음.",
+        note: { ko: "T2가 balance를 500으로 수정했지만 아직 커밋하지 않음.", en: "T2 changed balance to 500 but has not committed yet." },
       },
       {
         actor: "T1",
-        t1Sql: "SELECT balance\n  FROM accounts\n  WHERE id = 1\n-- → 500 (미커밋 값!)",
+        t1Sql: "SELECT balance\n  FROM accounts\n  WHERE id = 1\n-- → 500 (uncommitted!)",
         t2Sql: null,
-        t1View: "500",
+        t1View: { ko: "500", en: "500" },
         isAnomaly: true,
-        note: "T1이 T2의 미커밋 변경 값을 읽어버림.",
+        note: { ko: "T1이 T2의 미커밋 변경 값을 읽어버림.", en: "T1 reads T2's uncommitted change." },
       },
       {
         actor: "T2",
         t1Sql: null,
         t2Sql: "ROLLBACK",
-        t1View: "500 (실제론 1000이어야 함)",
+        t1View: { ko: "500 (실제론 1000이어야 함)", en: "500 (should be 1000)" },
         isAnomaly: true,
-        note: "T2가 롤백. 실제 DB는 다시 1000이지만 T1은 이미 500을 읽었음.",
+        note: { ko: "T2가 롤백. 실제 DB는 다시 1000이지만 T1은 이미 500을 읽었음.", en: "T2 rolls back. DB is 1000 again, but T1 already read 500." },
       },
     ],
   },
   {
     id: "non-repeatable",
     label: "Non-repeatable Read",
-    conclusion:
-      "같은 row를 두 번 읽었는데 값이 달라짐. Repeatable하지 않음.",
+    conclusion: {
+      ko: "같은 row를 두 번 읽었는데 값이 달라짐. Repeatable하지 않음.",
+      en: "The same row read twice returns different values. Not repeatable.",
+    },
     steps: [
       {
         actor: "T1",
         t1Sql: "BEGIN\nSELECT balance\n  FROM accounts\n  WHERE id = 1\n-- → 1000",
         t2Sql: null,
-        t1View: "1000",
+        t1View: { ko: "1000", en: "1000" },
         isAnomaly: false,
-        note: "T1이 처음 balance를 조회. 1000 확인.",
+        note: { ko: "T1이 처음 balance를 조회. 1000 확인.", en: "T1 reads balance for the first time. Gets 1000." },
       },
       {
         actor: "T2",
         t1Sql: null,
         t2Sql: "BEGIN\nUPDATE accounts\n  SET balance = 500\n  WHERE id = 1\nCOMMIT",
-        t1View: "(T2 커밋 완료)",
+        t1View: { ko: "(T2 커밋 완료)", en: "(T2 committed)" },
         isAnomaly: false,
-        note: "T2가 balance를 500으로 수정하고 커밋 완료.",
+        note: { ko: "T2가 balance를 500으로 수정하고 커밋 완료.", en: "T2 updates balance to 500 and commits." },
       },
       {
         actor: "T1",
-        t1Sql: "SELECT balance\n  FROM accounts\n  WHERE id = 1\n-- → 500 (다른 값!)",
+        t1Sql: "SELECT balance\n  FROM accounts\n  WHERE id = 1\n-- → 500 (different!)",
         t2Sql: null,
-        t1View: "500",
+        t1View: { ko: "500", en: "500" },
         isAnomaly: true,
-        note: "같은 쿼리를 다시 실행했는데 결과가 달라짐.",
+        note: { ko: "같은 쿼리를 다시 실행했는데 결과가 달라짐.", en: "The same query returns a different result." },
       },
     ],
   },
   {
     id: "phantom",
     label: "Phantom Read",
-    conclusion:
-      "유령처럼 없던 row가 나타남. Non-repeatable Read와 달리 기존 row가 아니라 새 row의 추가/삭제.",
+    conclusion: {
+      ko: "유령처럼 없던 row가 나타남. Non-repeatable Read와 달리 기존 row가 아니라 새 row의 추가/삭제.",
+      en: "Rows appear like phantoms. Unlike Non-repeatable Read, it's new rows being inserted/deleted, not existing rows changing.",
+    },
     steps: [
       {
         actor: "T1",
         t1Sql: "BEGIN\nSELECT COUNT(*)\n  FROM orders\n  WHERE amount > 100\n-- → 3",
         t2Sql: null,
-        t1View: "3건",
+        t1View: { ko: "3건", en: "3 rows" },
         isAnomaly: false,
-        note: "T1이 조건에 맞는 주문 수를 조회. 3건 확인.",
+        note: { ko: "T1이 조건에 맞는 주문 수를 조회. 3건 확인.", en: "T1 counts matching orders. Gets 3." },
       },
       {
         actor: "T2",
         t1Sql: null,
         t2Sql: "BEGIN\nINSERT INTO orders(amount)\n  VALUES(150)\nCOMMIT",
-        t1View: "(T2 커밋)",
+        t1View: { ko: "(T2 커밋)", en: "(T2 committed)" },
         isAnomaly: false,
-        note: "T2가 새 주문(amount=150)을 삽입하고 커밋.",
+        note: { ko: "T2가 새 주문(amount=150)을 삽입하고 커밋.", en: "T2 inserts a new order (amount=150) and commits." },
       },
       {
         actor: "T1",
-        t1Sql: "SELECT COUNT(*)\n  FROM orders\n  WHERE amount > 100\n-- → 4 (row 수 증가!)",
+        t1Sql: "SELECT COUNT(*)\n  FROM orders\n  WHERE amount > 100\n-- → 4 (row count changed!)",
         t2Sql: null,
-        t1View: "4건",
+        t1View: { ko: "4건", en: "4 rows" },
         isAnomaly: true,
-        note: "같은 범위 쿼리인데 결과 row 수가 달라짐.",
+        note: { ko: "같은 범위 쿼리인데 결과 row 수가 달라짐.", en: "The same range query returns a different row count." },
       },
     ],
   },
@@ -131,6 +138,7 @@ const SCENARIOS: Scenario[] = [
 export default function AnomalyTimeline() {
   const [scenarioIdx, setScenarioIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
+  const { lang } = useLanguage();
 
   const scenario = SCENARIOS[scenarioIdx];
   const currentStep = scenario.steps[stepIdx];
@@ -259,7 +267,7 @@ export default function AnomalyTimeline() {
             >
               <div>
                 <p className="font-mono text-xs text-zinc-500 mb-2">
-                  T1이 보는 값
+                  {lang === "ko" ? "T1이 보는 값" : "T1's view"}
                 </p>
                 <div
                   className={[
@@ -275,7 +283,7 @@ export default function AnomalyTimeline() {
                       currentStep.isAnomaly ? "text-rose-300" : "text-zinc-200",
                     ].join(" ")}
                   >
-                    {currentStep.t1View}
+                    {currentStep.t1View[lang]}
                   </span>
                 </div>
               </div>
@@ -293,7 +301,7 @@ export default function AnomalyTimeline() {
               )}
 
               <p className="text-xs text-zinc-400 leading-relaxed">
-                {currentStep.note}
+                {currentStep.note[lang]}
               </p>
             </motion.div>
           </AnimatePresence>
@@ -304,9 +312,9 @@ export default function AnomalyTimeline() {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
             >
-              <p className="font-mono text-xs text-zinc-500 mb-1.5">결론</p>
+              <p className="font-mono text-xs text-zinc-500 mb-1.5">{lang === "ko" ? "결론" : "Conclusion"}</p>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                {scenario.conclusion}
+                {scenario.conclusion[lang]}
               </p>
             </motion.div>
           )}

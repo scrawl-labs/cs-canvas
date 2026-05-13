@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SARGCase {
   query: string;
@@ -11,55 +12,111 @@ interface SARGCase {
   tag: string;
 }
 
-const CASES: SARGCase[] = [
+const CASES_KO: SARGCase[] = [
   {
     tag: "함수 적용",
     query: "WHERE DATE(created_at) = '2025-02-01'",
     result: "miss",
-    reason:
-      "컬럼에 함수를 씌우면 B-Tree가 시작점을 계산할 수 없습니다. 모든 row에 DATE()를 적용해야 해서 Full Scan.",
+    reason: "컬럼에 함수를 씌우면 B-Tree가 시작점을 계산할 수 없습니다. 모든 row에 DATE()를 적용해야 해서 Full Scan.",
     fix: "WHERE created_at >= '2025-02-01' AND created_at < '2025-02-02'",
   },
   {
     tag: "앞 와일드카드",
     query: "WHERE email LIKE '%kim'",
     result: "miss",
-    reason:
-      "앞에 %가 붙으면 B-Tree에서 어디서 시작해야 하는지 알 수 없습니다. 인덱스의 정렬 순서가 무의미해집니다.",
+    reason: "앞에 %가 붙으면 B-Tree에서 어디서 시작해야 하는지 알 수 없습니다. 인덱스의 정렬 순서가 무의미해집니다.",
     fix: "WHERE email LIKE 'kim%'  -- 뒤 와일드카드는 range scan 가능",
   },
   {
     tag: "타입 불일치",
     query: "WHERE user_id = '100'   -- user_id: INT",
     result: "miss",
-    reason:
-      "INT 컬럼에 문자열 '100'을 비교하면 묵시적 형변환이 발생합니다. 모든 row마다 변환이 일어나 인덱스 무력화.",
+    reason: "INT 컬럼에 문자열 '100'을 비교하면 묵시적 형변환이 발생합니다. 모든 row마다 변환이 일어나 인덱스 무력화.",
     fix: "WHERE user_id = 100  -- 타입 맞추기",
   },
   {
     tag: "올바른 LIKE",
     query: "WHERE email LIKE 'kim%'",
     result: "hit",
-    reason:
-      "시작 문자열이 확정되면 B-Tree에서 'kim' 이상 'kin' 미만 범위로 range scan이 가능합니다.",
+    reason: "시작 문자열이 확정되면 B-Tree에서 'kim' 이상 'kin' 미만 범위로 range scan이 가능합니다.",
   },
   {
     tag: "등치 조건",
     query: "WHERE email = 'kim@example.com'",
     result: "hit",
-    reason:
-      "정확한 키 탐색. B-Tree를 O(log N)으로 탐색해 해당 리프 노드를 바로 찾습니다. EXPLAIN에서 type: ref.",
+    reason: "정확한 키 탐색. B-Tree를 O(log N)으로 탐색해 해당 리프 노드를 바로 찾습니다. EXPLAIN에서 type: ref.",
   },
   {
     tag: "범위 조건",
     query: "WHERE created_at >= '2025-01-01'",
     result: "hit",
-    reason:
-      "시작점이 명확하므로 B-Tree에서 range scan이 가능합니다. EXPLAIN에서 type: range.",
+    reason: "시작점이 명확하므로 B-Tree에서 range scan이 가능합니다. EXPLAIN에서 type: range.",
   },
 ];
 
+const CASES_EN: SARGCase[] = [
+  {
+    tag: "Function on column",
+    query: "WHERE DATE(created_at) = '2025-02-01'",
+    result: "miss",
+    reason: "Wrapping a column in a function prevents B-Tree from computing a start point. Every row must be evaluated — Full Scan.",
+    fix: "WHERE created_at >= '2025-02-01' AND created_at < '2025-02-02'",
+  },
+  {
+    tag: "Leading wildcard",
+    query: "WHERE email LIKE '%kim'",
+    result: "miss",
+    reason: "A leading % means B-Tree has no start point. The sort order of the index becomes meaningless.",
+    fix: "WHERE email LIKE 'kim%'  -- trailing wildcard enables range scan",
+  },
+  {
+    tag: "Type mismatch",
+    query: "WHERE user_id = '100'   -- user_id: INT",
+    result: "miss",
+    reason: "Comparing an INT column with a string causes implicit type coercion on every row. Index is bypassed.",
+    fix: "WHERE user_id = 100  -- match the column type",
+  },
+  {
+    tag: "Correct LIKE",
+    query: "WHERE email LIKE 'kim%'",
+    result: "hit",
+    reason: "With a known prefix, B-Tree can range scan from 'kim' up to 'kin'.",
+  },
+  {
+    tag: "Equality",
+    query: "WHERE email = 'kim@example.com'",
+    result: "hit",
+    reason: "Exact key lookup. B-Tree traversal in O(log N) directly to the leaf. EXPLAIN shows type: ref.",
+  },
+  {
+    tag: "Range condition",
+    query: "WHERE created_at >= '2025-01-01'",
+    result: "hit",
+    reason: "Known start point enables range scan. EXPLAIN shows type: range.",
+  },
+];
+
+const UI_KO = {
+  heading: "인덱스가 타는/안 타는 이유 (SARGable)",
+  subheading: `B-Tree는 "시작점"을 알아야 탐색할 수 있습니다. 시작점을 망가뜨리는 패턴들.`,
+  hit: "인덱스 사용",
+  miss: "인덱스 미사용",
+  fixLabel: "올바른 작성법",
+};
+
+const UI_EN = {
+  heading: "Why Indexes Are (Not) Used — SARGable",
+  subheading: `B-Tree needs a known "start point" to traverse. Patterns that destroy the start point.`,
+  hit: "Index used",
+  miss: "Index skipped",
+  fixLabel: "Correct form",
+};
+
 export default function IndexSARGable() {
+  const { lang } = useLanguage();
+  const CASES = lang === "ko" ? CASES_KO : CASES_EN;
+  const ui = lang === "ko" ? UI_KO : UI_EN;
+
   const [activeIdx, setActiveIdx] = useState(0);
   const active = CASES[activeIdx];
 
@@ -67,10 +124,10 @@ export default function IndexSARGable() {
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
       <div className="p-6 pb-4 border-b border-white/10">
         <h3 className="text-white font-semibold text-sm font-mono mb-1">
-          인덱스가 타는/안 타는 이유 (SARGable)
+          {ui.heading}
         </h3>
         <p className="text-zinc-500 text-xs">
-          B-Tree는 &quot;시작점&quot;을 알아야 탐색할 수 있습니다. 시작점을 망가뜨리는 패턴들.
+          {ui.subheading}
         </p>
       </div>
 
@@ -117,7 +174,7 @@ export default function IndexSARGable() {
                     : "text-rose-400 border-rose-500/30 bg-rose-500/10"
                 }`}
               >
-                {active.result === "hit" ? "인덱스 사용" : "인덱스 미사용"}
+                {active.result === "hit" ? ui.hit : ui.miss}
               </span>
               <span className="text-xs text-zinc-600 font-mono">{active.tag}</span>
             </div>
@@ -141,7 +198,7 @@ export default function IndexSARGable() {
             {/* fix */}
             {active.fix && (
               <div>
-                <p className="text-xs text-zinc-600 font-mono mb-1.5">올바른 작성법</p>
+                <p className="text-xs text-zinc-600 font-mono mb-1.5">{ui.fixLabel}</p>
                 <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 font-mono text-xs">
                   <pre className="text-emerald-300">{active.fix}</pre>
                 </div>

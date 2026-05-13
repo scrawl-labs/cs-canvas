@@ -2,33 +2,40 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Tab = "undo-chain" | "rr-vs-rc";
 
 interface UndoStep {
   id: number;
-  title: string;
+  title: { ko: string; en: string };
   target: "current" | "v2" | "v1";
   verdict: "invisible" | "visible";
-  reason: string;
+  reason: { ko: string; en: string };
   result: string | null;
 }
 
 const UNDO_STEPS: UndoStep[] = [
   {
     id: 1,
-    title: "현재 row 검사",
+    title: { ko: "현재 row 검사", en: "Check current row" },
     target: "current",
     verdict: "invisible",
-    reason: "trx_id=103, m_ids=[101,103]에 포함 → 아직 활성 트랜잭션. 안 보임.",
+    reason: {
+      ko: "trx_id=103, m_ids=[101,103]에 포함 → 아직 활성 트랜잭션. 안 보임.",
+      en: "trx_id=103 is in m_ids=[101,103] → still active transaction. Not visible.",
+    },
     result: null,
   },
   {
     id: 2,
-    title: "undo v2 검사",
+    title: { ko: "undo v2 검사", en: "Check undo v2" },
     target: "v2",
     verdict: "visible",
-    reason: "trx_id=100, 100 < up_limit_id(101) → 커밋 완료. 보임.",
+    reason: {
+      ko: "trx_id=100, 100 < up_limit_id(101) → 커밋 완료. 보임.",
+      en: "trx_id=100, 100 < up_limit_id(101) → committed. Visible.",
+    },
     result: "balance = 800",
   },
 ];
@@ -124,6 +131,7 @@ function VersionBox({
 
 function UndoChainTab() {
   const [step, setStep] = useState(0);
+  const { lang } = useLanguage();
 
   const currentStep = UNDO_STEPS[step] ?? null;
 
@@ -141,7 +149,7 @@ function UndoChainTab() {
     <div className="flex flex-col gap-5">
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
         <p className="font-mono text-xs text-zinc-500 mb-4">
-          Read View: m_ids=[101,103], up_limit_id=101, low_limit_id=105 / TRX=101 조회
+          Read View: m_ids=[101,103], up_limit_id=101, low_limit_id=105 / {lang === "ko" ? "TRX=101 조회" : "TRX=101 query"}
         </p>
 
         <div className="flex items-start gap-1 overflow-x-auto pb-2">
@@ -188,7 +196,7 @@ function UndoChainTab() {
                 Step {currentStep.id}
               </span>
               <span className="font-mono text-xs font-semibold text-zinc-200">
-                {currentStep.title}
+                {currentStep.title[lang]}
               </span>
               <span
                 className={[
@@ -202,11 +210,11 @@ function UndoChainTab() {
               </span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              {currentStep.reason}
+              {currentStep.reason[lang]}
             </p>
             {currentStep.result && (
               <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
-                <span className="font-mono text-xs text-zinc-500">반환값 </span>
+                <span className="font-mono text-xs text-zinc-500">{lang === "ko" ? "반환값 " : "Result "}</span>
                 <span className="font-mono text-sm font-semibold text-emerald-300">
                   {currentStep.result}
                 </span>
@@ -256,7 +264,7 @@ function UndoChainTab() {
 interface TimelineEvent {
   label: string;
   highlight?: boolean;
-  sub?: string;
+  sub?: { ko: string; en: string };
 }
 
 interface IsolationColumn {
@@ -271,13 +279,13 @@ const RR_VS_RC_COLUMNS: IsolationColumn[] = [
     accentColor: "text-violet-400",
     events: [
       { label: "BEGIN" },
-      { label: "Read View 생성", highlight: true, sub: "트랜잭션 시작 시 1회" },
+      { label: "Read View 생성 / Create Read View", highlight: true, sub: { ko: "트랜잭션 시작 시 1회", en: "Created once at transaction start" } },
       { label: "SELECT → 1000" },
-      { label: "(T2: balance=800 커밋)", sub: "외부 변경" },
+      { label: "(T2: balance=800 커밋 / T2: balance=800 committed)", sub: { ko: "외부 변경", en: "External change" } },
       {
         label: "SELECT → 1000",
         highlight: true,
-        sub: "동일 Read View 재사용 → 이전 값 유지",
+        sub: { ko: "동일 Read View 재사용 → 이전 값 유지", en: "Same Read View reused → previous value retained" },
       },
     ],
   },
@@ -287,18 +295,20 @@ const RR_VS_RC_COLUMNS: IsolationColumn[] = [
     events: [
       { label: "BEGIN" },
       { label: "SELECT → 1000" },
-      { label: "Read View 생성", sub: "매 SELECT마다 새로 생성" },
-      { label: "(T2: balance=800 커밋)", sub: "외부 변경" },
+      { label: "Read View 생성 / Create Read View", sub: { ko: "매 SELECT마다 새로 생성", en: "Created fresh for each SELECT" } },
+      { label: "(T2: balance=800 커밋 / T2: balance=800 committed)", sub: { ko: "외부 변경", en: "External change" } },
       {
         label: "SELECT → 800",
         highlight: true,
-        sub: "새 Read View 생성 → 커밋된 값 보임",
+        sub: { ko: "새 Read View 생성 → 커밋된 값 보임", en: "New Read View created → sees committed value" },
       },
     ],
   },
 ];
 
 function RRvsRCTab() {
+  const { lang } = useLanguage();
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -333,7 +343,7 @@ function RRvsRCTab() {
                     </span>
                     {ev.sub && (
                       <span className="text-[11px] text-zinc-500 leading-relaxed">
-                        {ev.sub}
+                        {ev.sub[lang]}
                       </span>
                     )}
                   </div>
@@ -345,10 +355,11 @@ function RRvsRCTab() {
       </div>
 
       <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3">
-        <p className="font-mono text-xs text-rose-400 mb-1">핵심 차이</p>
+        <p className="font-mono text-xs text-rose-400 mb-1">{lang === "ko" ? "핵심 차이" : "Key Difference"}</p>
         <p className="text-xs text-zinc-300 leading-relaxed">
-          RR은 BEGIN 시점의 스냅샷을 트랜잭션 내내 유지. RC는 SELECT마다 최신 커밋
-          상태를 새로 스냅샷. RR이 Non-repeatable Read를 방지하는 이유가 여기 있음.
+          {lang === "ko"
+            ? "RR은 BEGIN 시점의 스냅샷을 트랜잭션 내내 유지. RC는 SELECT마다 최신 커밋 상태를 새로 스냅샷. RR이 Non-repeatable Read를 방지하는 이유가 여기 있음."
+            : "RR holds the snapshot taken at BEGIN for the entire transaction. RC takes a fresh snapshot of the latest committed state for each SELECT. This is why RR prevents Non-repeatable Reads."}
         </p>
       </div>
     </div>

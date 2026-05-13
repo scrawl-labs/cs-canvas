@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type LookupMode = "normal" | "covering";
 
@@ -39,7 +40,6 @@ const IDX_EDGES = [["root","bL"],["root","bR"],["bL","l1"],["bL","l2"],["bR","l3
 const DATA_EDGES = [["root","bL"],["root","bR"],["bL","l1"],["bR","l2"],["bR","l3"]];
 
 function cx(n: NodeDef) { return n.x + W / 2; }
-function cy(n: NodeDef) { return n.y + H / 2; }
 
 interface Step {
   label: string;
@@ -52,60 +52,139 @@ interface Step {
   done?: boolean;
 }
 
-const NORMAL: Step[] = [
-  {
-    label: "인덱스 Root 탐색",
-    description: "Root 노드는 Buffer Pool에 항상 상주합니다. 디스크 접근 없이 메모리에서 키를 비교합니다.",
-    idxHL: ["root"], dataHL: [], arrow: false,
-    tag: "Buffer Pool", tagColor: "text-violet-400",
+const KO = {
+  modeLabels: {
+    normal: "일반 인덱스",
+    covering: "커버링 인덱스",
   },
-  {
-    label: "Branch 탐색 (메모리)",
-    description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. Branch도 자주 접근되어 거의 항상 캐시됩니다.",
-    idxHL: ["root", "bL"], dataHL: [], arrow: false,
-    tag: "Buffer Pool", tagColor: "text-violet-400",
-  },
-  {
-    label: "Leaf 도달 — PK 획득",
-    description: "인덱스 Leaf에는 (email, PK=583)만 있습니다. 실제 row 데이터는 없어요. Leaf는 LRU eviction 대상이라 Disk I/O가 발생할 수 있습니다.",
-    idxHL: ["l2"], dataHL: [], arrow: false,
-    tag: "Disk I/O 가능", tagColor: "text-amber-400",
-  },
-  {
-    label: "Random I/O — Data B+Tree 접근",
-    description: "PK=583으로 클러스터드 인덱스(Data B+Tree)에 접근합니다. 인덱스 Leaf와 Data 페이지는 물리적으로 다른 위치 → 랜덤 I/O 발생. 이게 인덱스가 있어도 느려질 수 있는 핵심 이유입니다.",
-    idxHL: ["l2"], dataHL: ["root"], arrow: true,
-    tag: "Random I/O", tagColor: "text-rose-400",
-  },
-  {
-    label: "Data B+Tree에서 실제 Row 반환",
-    description: "Data B+Tree를 내려가 pk=583의 실제 row를 읽습니다. 이 페이지도 캐시에 없으면 추가 Disk I/O. SELECT *이고 대량 조회면 이 비용이 N번 반복됩니다.",
-    idxHL: [], dataHL: ["root", "bR", "l2"], arrow: false,
-    tag: "Disk I/O", tagColor: "text-rose-400",
-  },
-];
+  zoneBuffer: "Buffer Pool (메모리)",
+  zoneDisk: "Disk",
+  idxTreeLabel: "Index B+Tree (보조 인덱스)",
+  dataTreeLabel: "Data B+Tree (클러스터드)",
+  randomIOLabel: "Random I/O",
+  prevBtn: "← prev",
+  nextBtn: "next →",
+  normal: [
+    {
+      label: "인덱스 Root 탐색",
+      description: "Root 노드는 Buffer Pool에 항상 상주합니다. 디스크 접근 없이 메모리에서 키를 비교합니다.",
+      idxHL: ["root"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Branch 탐색 (메모리)",
+      description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. Branch도 자주 접근되어 거의 항상 캐시됩니다.",
+      idxHL: ["root", "bL"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Leaf 도달 — PK 획득",
+      description: "인덱스 Leaf에는 (email, PK=583)만 있습니다. 실제 row 데이터는 없어요. Leaf는 LRU eviction 대상이라 Disk I/O가 발생할 수 있습니다.",
+      idxHL: ["l2"], dataHL: [], arrow: false,
+      tag: "Disk I/O 가능", tagColor: "text-amber-400",
+    },
+    {
+      label: "Random I/O — Data B+Tree 접근",
+      description: "PK=583으로 클러스터드 인덱스(Data B+Tree)에 접근합니다. 인덱스 Leaf와 Data 페이지는 물리적으로 다른 위치 → 랜덤 I/O 발생. 이게 인덱스가 있어도 느려질 수 있는 핵심 이유입니다.",
+      idxHL: ["l2"], dataHL: ["root"], arrow: true,
+      tag: "Random I/O", tagColor: "text-rose-400",
+    },
+    {
+      label: "Data B+Tree에서 실제 Row 반환",
+      description: "Data B+Tree를 내려가 pk=583의 실제 row를 읽습니다. 이 페이지도 캐시에 없으면 추가 Disk I/O. SELECT *이고 대량 조회면 이 비용이 N번 반복됩니다.",
+      idxHL: [], dataHL: ["root", "bR", "l2"], arrow: false,
+      tag: "Disk I/O", tagColor: "text-rose-400",
+    },
+  ] as Step[],
+  covering: [
+    {
+      label: "인덱스 Root 탐색",
+      description: "Root 노드 탐색. Buffer Pool에 상주. 디스크 접근 없음.",
+      idxHL: ["root"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Branch 탐색 (메모리)",
+      description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. 메모리 캐시.",
+      idxHL: ["root", "bL"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Leaf — 모든 컬럼 있음, 여기서 끝",
+      description: "SELECT email, status → 인덱스 (status, email)에 두 컬럼 모두 포함됩니다. Data B+Tree에 접근할 이유가 없습니다. EXPLAIN Extra: Using index.",
+      idxHL: ["l2"], dataHL: [], arrow: false,
+      tag: "Using index", tagColor: "text-emerald-400",
+      done: true,
+    },
+  ] as Step[],
+};
 
-const COVERING: Step[] = [
-  {
-    label: "인덱스 Root 탐색",
-    description: "Root 노드 탐색. Buffer Pool에 상주. 디스크 접근 없음.",
-    idxHL: ["root"], dataHL: [], arrow: false,
-    tag: "Buffer Pool", tagColor: "text-violet-400",
+const EN = {
+  modeLabels: {
+    normal: "Normal Index",
+    covering: "Covering Index",
   },
-  {
-    label: "Branch 탐색 (메모리)",
-    description: "'lee@...'는 A-M 범위이므로 bL 포인터를 따라 내려갑니다. 메모리 캐시.",
-    idxHL: ["root", "bL"], dataHL: [], arrow: false,
-    tag: "Buffer Pool", tagColor: "text-violet-400",
-  },
-  {
-    label: "Leaf — 모든 컬럼 있음, 여기서 끝",
-    description: "SELECT email, status → 인덱스 (status, email)에 두 컬럼 모두 포함됩니다. Data B+Tree에 접근할 이유가 없습니다. EXPLAIN Extra: Using index.",
-    idxHL: ["l2"], dataHL: [], arrow: false,
-    tag: "Using index", tagColor: "text-emerald-400",
-    done: true,
-  },
-];
+  zoneBuffer: "Buffer Pool (memory)",
+  zoneDisk: "Disk",
+  idxTreeLabel: "Index B+Tree (Secondary)",
+  dataTreeLabel: "Data B+Tree (Clustered)",
+  randomIOLabel: "Random I/O",
+  prevBtn: "← prev",
+  nextBtn: "next →",
+  normal: [
+    {
+      label: "Index Root Traversal",
+      description: "The Root node always resides in the Buffer Pool. Keys are compared in memory without disk access.",
+      idxHL: ["root"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Branch Traversal (memory)",
+      description: "'lee@...' falls in the A-M range, so we follow the bL pointer. Branch nodes are frequently accessed and almost always cached.",
+      idxHL: ["root", "bL"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Reach Leaf — Obtain PK",
+      description: "The index Leaf contains only (email, PK=583). There is no actual row data here. Leaf pages are LRU eviction targets so Disk I/O may occur.",
+      idxHL: ["l2"], dataHL: [], arrow: false,
+      tag: "Disk I/O possible", tagColor: "text-amber-400",
+    },
+    {
+      label: "Random I/O — Access Data B+Tree",
+      description: "Access the clustered index (Data B+Tree) using PK=583. The index Leaf and Data pages are at different physical locations → Random I/O occurs. This is the core reason why even indexed queries can be slow.",
+      idxHL: ["l2"], dataHL: ["root"], arrow: true,
+      tag: "Random I/O", tagColor: "text-rose-400",
+    },
+    {
+      label: "Return Actual Row from Data B+Tree",
+      description: "Traverse the Data B+Tree to read the actual row for pk=583. If this page is also not cached, an additional Disk I/O occurs. For SELECT * with large result sets, this cost repeats N times.",
+      idxHL: [], dataHL: ["root", "bR", "l2"], arrow: false,
+      tag: "Disk I/O", tagColor: "text-rose-400",
+    },
+  ] as Step[],
+  covering: [
+    {
+      label: "Index Root Traversal",
+      description: "Traverse the Root node. Resides in Buffer Pool. No disk access.",
+      idxHL: ["root"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Branch Traversal (memory)",
+      description: "'lee@...' falls in the A-M range so we follow the bL pointer. Memory cache hit.",
+      idxHL: ["root", "bL"], dataHL: [], arrow: false,
+      tag: "Buffer Pool", tagColor: "text-violet-400",
+    },
+    {
+      label: "Leaf — All columns present, done here",
+      description: "SELECT email, status → both columns are included in the index (status, email). No reason to access the Data B+Tree. EXPLAIN Extra: Using index.",
+      idxHL: ["l2"], dataHL: [], arrow: false,
+      tag: "Using index", tagColor: "text-emerald-400",
+      done: true,
+    },
+  ] as Step[],
+};
 
 function Nodes({
   nodes, edges, hl, isCovering, done, prefix,
@@ -184,10 +263,13 @@ interface Props {
 }
 
 export default function IndexLookupFlow({ initialMode = "normal", showToggle = true }: Props) {
+  const { lang } = useLanguage();
+  const t = lang === "ko" ? KO : EN;
+
   const [mode, setMode] = useState<LookupMode>(initialMode);
   const [step, setStep] = useState(0);
 
-  const steps = mode === "covering" ? COVERING : NORMAL;
+  const steps = mode === "covering" ? t.covering : t.normal;
   const cur = steps[Math.min(step, steps.length - 1)];
 
   function switchMode(m: LookupMode) { setMode(m); setStep(0); }
@@ -215,7 +297,7 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {m === "normal" ? "일반 인덱스" : "커버링 인덱스"}
+              {t.modeLabels[m]}
             </button>
           ))}
         </div>
@@ -230,15 +312,15 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
             <line x1={0} y1={MEM_Y} x2={640} y2={MEM_Y} stroke="rgba(255,255,255,0.06)" strokeWidth={1} strokeDasharray="4 3" />
 
             {/* zone labels */}
-            <text x={8} y={13} fill="rgba(139,92,246,0.45)" fontSize={8} fontFamily="monospace">Buffer Pool (메모리)</text>
-            <text x={8} y={MEM_Y + 13} fill="rgba(255,255,255,0.18)" fontSize={8} fontFamily="monospace">Disk</text>
+            <text x={8} y={13} fill="rgba(139,92,246,0.45)" fontSize={8} fontFamily="monospace">{t.zoneBuffer}</text>
+            <text x={8} y={MEM_Y + 13} fill="rgba(255,255,255,0.18)" fontSize={8} fontFamily="monospace">{t.zoneDisk}</text>
 
             {/* tree labels */}
             <text x={150} y={26} textAnchor="middle" fill="rgba(255,255,255,0.25)" fontSize={9} fontFamily="monospace">
-              Index B+Tree (보조 인덱스)
+              {t.idxTreeLabel}
             </text>
             <text x={504} y={26} textAnchor="middle" fill="rgba(255,255,255,0.25)" fontSize={9} fontFamily="monospace">
-              Data B+Tree (클러스터드)
+              {t.dataTreeLabel}
             </text>
 
             {/* leaf linked-list hint */}
@@ -276,7 +358,7 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
                 />
                 <text x={labelX} y={labelY} textAnchor="middle"
                   fill="rgba(244,63,94,0.75)" fontSize={8} fontFamily="monospace">
-                  Random I/O
+                  {t.randomIOLabel}
                 </text>
               </motion.g>
             )}
@@ -311,14 +393,14 @@ export default function IndexLookupFlow({ initialMode = "normal", showToggle = t
                 disabled={step === 0}
                 className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
               >
-                ← prev
+                {t.prevBtn}
               </button>
               <button
                 onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
                 disabled={step === steps.length - 1}
                 className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed font-mono transition-all"
               >
-                next →
+                {t.nextBtn}
               </button>
             </div>
           </div>

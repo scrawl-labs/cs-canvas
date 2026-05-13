@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WalStep {
   id: number;
-  title: string;
-  description: string;
+  title: { ko: string; en: string };
+  description: { ko: string; en: string };
   activeLane: "buffer" | "redo" | "data" | "commit";
   showCrashButton: boolean;
 }
@@ -14,29 +15,41 @@ interface WalStep {
 const WAL_STEPS: WalStep[] = [
   {
     id: 1,
-    title: "Buffer Pool 페이지 수정",
-    description: "UPDATE 실행 → Buffer Pool의 page를 dirty 상태로 변경. Undo log에 이전 값(balance=1000) 기록.",
+    title: { ko: "Buffer Pool 페이지 수정", en: "Modify Buffer Pool Page" },
+    description: {
+      ko: "UPDATE 실행 → Buffer Pool의 page를 dirty 상태로 변경. Undo log에 이전 값(balance=1000) 기록.",
+      en: "UPDATE executes → marks the Buffer Pool page as dirty. Records the before-image (balance=1000) in the undo log.",
+    },
     activeLane: "buffer",
     showCrashButton: false,
   },
   {
     id: 2,
-    title: "Redo Log 기록 + fsync",
-    description: "Redo log ring buffer에 LSN=101 엔트리 추가. fsync로 디스크에 강제 기록. WAL 보장.",
+    title: { ko: "Redo Log 기록 + fsync", en: "Write Redo Log + fsync" },
+    description: {
+      ko: "Redo log ring buffer에 LSN=101 엔트리 추가. fsync로 디스크에 강제 기록. WAL 보장.",
+      en: "Adds LSN=101 entry to the redo log ring buffer. Forces it to disk with fsync. WAL guarantee.",
+    },
     activeLane: "redo",
     showCrashButton: false,
   },
   {
     id: 3,
-    title: "COMMIT 응답",
-    description: "redo log fsync 완료 후 클라이언트에 OK 반환. 아직 data file에는 미기록 상태.",
+    title: { ko: "COMMIT 응답", en: "COMMIT Response" },
+    description: {
+      ko: "redo log fsync 완료 후 클라이언트에 OK 반환. 아직 data file에는 미기록 상태.",
+      en: "After redo log fsync completes, returns OK to the client. Data file has not been written yet.",
+    },
     activeLane: "commit",
     showCrashButton: true,
   },
   {
     id: 4,
-    title: "비동기 Flush (Checkpoint)",
-    description: "Checkpoint 진행. dirty page가 data file에 기록됨. 이 시점 이전 LSN은 안전.",
+    title: { ko: "비동기 Flush (Checkpoint)", en: "Async Flush (Checkpoint)" },
+    description: {
+      ko: "Checkpoint 진행. dirty page가 data file에 기록됨. 이 시점 이전 LSN은 안전.",
+      en: "Checkpoint runs. Dirty pages are written to the data file. LSNs before this point are safe.",
+    },
     activeLane: "data",
     showCrashButton: false,
   },
@@ -50,6 +63,7 @@ export default function WALCrashRecovery() {
   const [step, setStep] = useState(0);
   const [crash, setCrash] = useState<CrashRecoveryState>({ phase: "idle" });
   const current = WAL_STEPS[step];
+  const { lang } = useLanguage();
 
   const handleCrash = () => {
     setCrash({ phase: "crashed" });
@@ -68,28 +82,28 @@ export default function WALCrashRecovery() {
     <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="font-mono text-lg text-zinc-100">WAL & Crash Recovery</h2>
-        <p className="text-sm text-zinc-500 mt-1">Undo / Redo log 구조와 크래시 복구 흐름</p>
+        <p className="text-sm text-zinc-500 mt-1">{lang === "ko" ? "Undo / Redo log 구조와 크래시 복구 흐름" : "Undo / Redo log structure and crash recovery flow"}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="border border-violet-500/30 bg-violet-500/[0.06] rounded-lg p-4 space-y-1">
           <p className="font-mono text-xs text-violet-400">Undo Log</p>
-          <p className="text-xs text-zinc-300">변경 전 값 저장</p>
-          <p className="text-xs text-zinc-500">용도: 롤백, MVCC</p>
-          <p className="text-xs text-zinc-500">위치: 테이블스페이스 내</p>
+          <p className="text-xs text-zinc-300">{lang === "ko" ? "변경 전 값 저장" : "Stores before-image"}</p>
+          <p className="text-xs text-zinc-500">{lang === "ko" ? "용도: 롤백, MVCC" : "Purpose: Rollback, MVCC"}</p>
+          <p className="text-xs text-zinc-500">{lang === "ko" ? "위치: 테이블스페이스 내" : "Location: Inside tablespace"}</p>
         </div>
         <div className="border border-emerald-500/30 bg-emerald-500/[0.06] rounded-lg p-4 space-y-1">
           <p className="font-mono text-xs text-emerald-400">Redo Log (WAL)</p>
-          <p className="text-xs text-zinc-300">변경 후 값 저장</p>
-          <p className="text-xs text-zinc-500">용도: Crash Recovery</p>
-          <p className="text-xs text-zinc-500">위치: ib_logfile (디스크)</p>
+          <p className="text-xs text-zinc-300">{lang === "ko" ? "변경 후 값 저장" : "Stores after-image"}</p>
+          <p className="text-xs text-zinc-500">{lang === "ko" ? "용도: Crash Recovery" : "Purpose: Crash Recovery"}</p>
+          <p className="text-xs text-zinc-500">{lang === "ko" ? "위치: ib_logfile (디스크)" : "Location: ib_logfile (disk)"}</p>
         </div>
       </div>
 
       <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3 font-mono text-xs text-zinc-400">
-        <span className="text-zinc-500">시나리오:</span>{" "}
+        <span className="text-zinc-500">{lang === "ko" ? "시나리오:" : "Scenario:"}</span>{" "}
         <span className="text-emerald-400">UPDATE accounts SET balance=800 WHERE id=1</span>
-        <span className="text-zinc-600 ml-2">(이전: 1000)</span>
+        <span className="text-zinc-600 ml-2">{lang === "ko" ? "(이전: 1000)" : "(before: 1000)"}</span>
       </div>
 
       <div className="space-y-3">
@@ -102,7 +116,7 @@ export default function WALCrashRecovery() {
               exit={{ opacity: 0 }}
               className="border border-rose-500 bg-rose-500/10 rounded-lg p-3 text-center font-mono text-sm text-rose-400"
             >
-              CRASH! — 서버 비정상 종료
+              {lang === "ko" ? "CRASH! — 서버 비정상 종료" : "CRASH! — Server abnormal shutdown"}
             </motion.div>
           )}
           {crash.phase === "recovering" && (
@@ -113,7 +127,7 @@ export default function WALCrashRecovery() {
               exit={{ opacity: 0 }}
               className="border border-amber-500/50 bg-amber-500/10 rounded-lg p-3 text-center font-mono text-sm text-amber-400"
             >
-              서버 재시작 — Redo log checkpoint 이후 LSN=101 재생 중...
+              {lang === "ko" ? "서버 재시작 — Redo log checkpoint 이후 LSN=101 재생 중..." : "Server restarting — Replaying LSN=101 after redo log checkpoint..."}
             </motion.div>
           )}
           {crash.phase === "recovered" && (
@@ -124,7 +138,7 @@ export default function WALCrashRecovery() {
               exit={{ opacity: 0 }}
               className="border border-emerald-500/50 bg-emerald-500/10 rounded-lg p-3 text-center font-mono text-sm text-emerald-400"
             >
-              balance=800 복구 완료 — WAL이 데이터 유실을 방지함
+              {lang === "ko" ? "balance=800 복구 완료 — WAL이 데이터 유실을 방지함" : "balance=800 recovered — WAL prevented data loss"}
             </motion.div>
           )}
         </AnimatePresence>
@@ -155,7 +169,7 @@ export default function WALCrashRecovery() {
                   animate={{ opacity: 1 }}
                   className="text-violet-400 text-[10px] mt-1"
                 >
-                  수정됨
+                  {lang === "ko" ? "수정됨" : "Modified"}
                 </motion.p>
               )}
             </motion.div>
@@ -189,12 +203,12 @@ export default function WALCrashRecovery() {
                       animate={{ opacity: 1 }}
                       className="text-emerald-300 text-[10px] border-t border-white/10 pt-1 mt-1"
                     >
-                      fsync 완료
+                      {lang === "ko" ? "fsync 완료" : "fsync done"}
                     </motion.div>
                   )}
                 </>
               ) : (
-                <div className="text-zinc-600 text-[10px]">비어있음</div>
+                <div className="text-zinc-600 text-[10px]">{lang === "ko" ? "비어있음" : "empty"}</div>
               )}
             </motion.div>
             <div className="border border-white/10 rounded px-2 py-1 font-mono text-[10px] text-zinc-600 mt-2 text-center">
@@ -222,7 +236,7 @@ export default function WALCrashRecovery() {
               </p>
             </motion.div>
             <div className="border border-white/10 rounded px-2 py-1 font-mono text-[10px] text-zinc-600 mt-2 text-center">
-              ib_data (디스크)
+              {lang === "ko" ? "ib_data (디스크)" : "ib_data (disk)"}
             </div>
           </LaneCard>
         </div>
@@ -237,8 +251,8 @@ export default function WALCrashRecovery() {
           transition={{ duration: 0.2 }}
           className="bg-white/[0.02] border border-white/10 rounded-lg p-4 space-y-1"
         >
-          <p className="font-mono text-xs text-zinc-300">Step {step + 1}: {current.title}</p>
-          <p className="text-xs text-zinc-500">{current.description}</p>
+          <p className="font-mono text-xs text-zinc-300">Step {step + 1}: {current.title[lang]}</p>
+          <p className="text-xs text-zinc-500">{current.description[lang]}</p>
         </motion.div>
       </AnimatePresence>
 
@@ -248,7 +262,7 @@ export default function WALCrashRecovery() {
             onClick={handleReset}
             className="px-4 py-1.5 rounded border border-white/10 text-xs text-zinc-400 hover:border-white/20 transition-colors font-mono"
           >
-            처음으로
+            {lang === "ko" ? "처음으로" : "Reset"}
           </button>
         </div>
       ) : (
