@@ -18,7 +18,7 @@ const KO = {
     {
       name: "OSI Layers",
       description: "계층별 캡슐화 — 헤더가 페이로드를 감싸는 과정을 확인합니다.",
-      href: undefined,
+      href: "/networks/osi-layers",
     },
     {
       name: "IP Routing",
@@ -48,7 +48,7 @@ const EN = {
     {
       name: "OSI Layers",
       description: "Layer-by-layer encapsulation — see headers wrap around payload.",
-      href: undefined,
+      href: "/networks/osi-layers",
     },
     {
       name: "IP Routing",
