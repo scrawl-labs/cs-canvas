@@ -23,7 +23,7 @@ const KO = {
     {
       name: "IP Routing",
       description: "라우팅 테이블, 최장 접두사 매칭 — 홉-바이-홉 패킷 경로를 따라갑니다.",
-      href: undefined,
+      href: "/networks/ip-routing",
     },
     {
       name: "DNS Resolution",
@@ -53,7 +53,7 @@ const EN = {
     {
       name: "IP Routing",
       description: "Routing tables, longest prefix match — hop-by-hop packet journey.",
-      href: undefined,
+      href: "/networks/ip-routing",
     },
     {
       name: "DNS Resolution",
