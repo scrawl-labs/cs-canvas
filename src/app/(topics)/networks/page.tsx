@@ -41,6 +41,12 @@ const KO = {
       href: "/networks/network-devices",
     },
     {
+      name: "HTTP & HTTPS",
+      description:
+        "HTTP는 평문, HTTPS는 암호화 — TLS 핸드셰이크와 google.com 입력 시 일어나는 모든 과정을 따라갑니다.",
+      href: "/networks/http-https",
+    },
+    {
       name: "DNS Resolution",
       description: "재귀적 vs 반복적 — 리졸버 체인을 단계별로 확인합니다.",
       href: undefined,
@@ -84,6 +90,12 @@ const EN = {
       description:
         "From L2 switches to L7 load balancers — what each layer's device does, explained with everyday analogies.",
       href: "/networks/network-devices",
+    },
+    {
+      name: "HTTP & HTTPS",
+      description:
+        "HTTP is plaintext, HTTPS is encrypted — follow the TLS handshake and everything that happens when you type google.com.",
+      href: "/networks/http-https",
     },
     {
       name: "DNS Resolution",
