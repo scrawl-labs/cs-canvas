@@ -11,18 +11,27 @@ const KO = {
   soon: "준비 중",
   subtopics: [
     {
+      name: "Network Basics",
+      description:
+        "네트워크의 기본 개념 — 프로토콜, 주소 체계, 패킷 전달의 전체 그림을 정리합니다.",
+      href: "/networks/network-basics",
+    },
+    {
       name: "TCP Three-Way Handshake",
-      description: "SYN, SYN-ACK, ACK — 클라이언트와 서버 사이의 패킷 교환을 단계별로 시각화합니다.",
+      description:
+        "SYN, SYN-ACK, ACK — 클라이언트와 서버 사이의 패킷 교환을 단계별로 시각화합니다.",
       href: "/networks/tcp-handshake",
     },
     {
       name: "OSI Layers",
-      description: "계층별 캡슐화 — 헤더가 페이로드를 감싸는 과정을 확인합니다.",
+      description:
+        "계층별 캡슐화 — 헤더가 페이로드를 감싸는 과정을 확인합니다.",
       href: "/networks/osi-layers",
     },
     {
       name: "IP Routing",
-      description: "라우팅 테이블, 최장 접두사 매칭 — 홉-바이-홉 패킷 경로를 따라갑니다.",
+      description:
+        "라우팅 테이블, 최장 접두사 매칭 — 홉-바이-홉 패킷 경로를 따라갑니다.",
       href: "/networks/ip-routing",
     },
     {
@@ -41,23 +50,33 @@ const EN = {
   soon: "soon",
   subtopics: [
     {
+      name: "Network Basics",
+      description:
+        "Fundamental concepts — protocols, addressing, and the big picture of packet delivery.",
+      href: "/networks/network-basics",
+    },
+    {
       name: "TCP Three-Way Handshake",
-      description: "SYN, SYN-ACK, ACK — packet exchange animated between client and server.",
+      description:
+        "SYN, SYN-ACK, ACK — packet exchange animated between client and server.",
       href: "/networks/tcp-handshake",
     },
     {
       name: "OSI Layers",
-      description: "Layer-by-layer encapsulation — see headers wrap around payload.",
+      description:
+        "Layer-by-layer encapsulation — see headers wrap around payload.",
       href: "/networks/osi-layers",
     },
     {
       name: "IP Routing",
-      description: "Routing tables, longest prefix match — hop-by-hop packet journey.",
+      description:
+        "Routing tables, longest prefix match — hop-by-hop packet journey.",
       href: "/networks/ip-routing",
     },
     {
       name: "DNS Resolution",
-      description: "Recursive vs iterative — resolver chain shown step by step.",
+      description:
+        "Recursive vs iterative — resolver chain shown step by step.",
       href: undefined,
     },
   ],
@@ -84,8 +103,12 @@ export default function NetworksPage() {
 
         {/* header */}
         <div className="mb-12">
-          <h1 className="text-3xl font-bold text-white font-mono mb-3">{t.title}</h1>
-          <p className="text-zinc-400 text-base max-w-lg leading-relaxed">{t.desc}</p>
+          <h1 className="text-3xl font-bold text-white font-mono mb-3">
+            {t.title}
+          </h1>
+          <p className="text-zinc-400 text-base max-w-lg leading-relaxed">
+            {t.desc}
+          </p>
         </div>
 
         {/* subtopics grid */}
@@ -95,7 +118,9 @@ export default function NetworksPage() {
             const inner = (
               <div className="relative">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-white">{subtopic.name}</h3>
+                  <h3 className="text-sm font-semibold text-white">
+                    {subtopic.name}
+                  </h3>
                   <span
                     className={`text-xs border rounded px-1.5 py-0.5 ${
                       isReady
@@ -106,7 +131,9 @@ export default function NetworksPage() {
                     {isReady ? t.ready : t.soon}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 leading-relaxed">{subtopic.description}</p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  {subtopic.description}
+                </p>
               </div>
             );
 
