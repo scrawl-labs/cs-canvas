@@ -35,6 +35,12 @@ const KO = {
       href: "/networks/ip-routing",
     },
     {
+      name: "Network Devices",
+      description:
+        "L2 스위치부터 L7 로드밸런서까지 — 각 계층의 장비가 하는 일을 일상 비유로 쉽게 이해합니다.",
+      href: "/networks/network-devices",
+    },
+    {
       name: "DNS Resolution",
       description: "재귀적 vs 반복적 — 리졸버 체인을 단계별로 확인합니다.",
       href: undefined,
@@ -72,6 +78,12 @@ const EN = {
       description:
         "Routing tables, longest prefix match — hop-by-hop packet journey.",
       href: "/networks/ip-routing",
+    },
+    {
+      name: "Network Devices",
+      description:
+        "From L2 switches to L7 load balancers — what each layer's device does, explained with everyday analogies.",
+      href: "/networks/network-devices",
     },
     {
       name: "DNS Resolution",
