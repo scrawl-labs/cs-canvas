@@ -49,7 +49,7 @@ const KO = {
     {
       name: "DNS Resolution",
       description: "재귀적 vs 반복적 — 리졸버 체인을 단계별로 확인합니다.",
-      href: undefined,
+      href: "/networks/dns-resolution",
     },
   ],
 };
@@ -101,7 +101,7 @@ const EN = {
       name: "DNS Resolution",
       description:
         "Recursive vs iterative — resolver chain shown step by step.",
-      href: undefined,
+      href: "/networks/dns-resolution",
     },
   ],
 };

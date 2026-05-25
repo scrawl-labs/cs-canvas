@@ -26,8 +26,7 @@ const topics = [
   {
     id: "operating-systems",
     title: "Operating Systems",
-    description:
-      "Process scheduling, memory management, deadlocks visualized.",
+    description: "Process scheduling, memory management, deadlocks visualized.",
     icon: "⚙️",
     color: "from-orange-500 to-amber-600",
     subtopics: ["Scheduling", "Memory", "Deadlock"],
@@ -40,7 +39,7 @@ const topics = [
     icon: "🌐",
     color: "from-blue-500 to-cyan-600",
     subtopics: ["TCP/IP", "OSI Layers", "Routing"],
-    count: 4,
+    count: 6,
   },
   {
     id: "databases",
