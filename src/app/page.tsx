@@ -12,7 +12,7 @@ const topics = [
     icon: "⚡",
     color: "from-violet-500 to-purple-600",
     subtopics: ["Sorting", "Graph Traversal", "Dynamic Programming"],
-    count: 8,
+    count: 3,
   },
   {
     id: "data-structures",
@@ -21,7 +21,7 @@ const topics = [
     icon: "🌲",
     color: "from-emerald-500 to-teal-600",
     subtopics: ["Trees", "Heaps", "Linked Lists"],
-    count: 6,
+    count: 4,
   },
   {
     id: "operating-systems",
@@ -30,7 +30,7 @@ const topics = [
     icon: "⚙️",
     color: "from-orange-500 to-amber-600",
     subtopics: ["Scheduling", "Memory", "Deadlock"],
-    count: 5,
+    count: 3,
   },
   {
     id: "networks",
@@ -49,7 +49,7 @@ const topics = [
     icon: "🗄️",
     color: "from-rose-500 to-pink-600",
     subtopics: ["B-Tree", "Transactions", "Joins"],
-    count: 5,
+    count: 4,
   },
   {
     id: "computer-architecture",
