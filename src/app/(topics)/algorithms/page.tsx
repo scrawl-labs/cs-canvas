@@ -5,11 +5,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const KO = {
   title: "알고리즘",
-  description: "정렬, 그래프 탐색, 동적 계획법 — 실행 과정을 시각화로 따라갑니다.",
+  description:
+    "정렬, 그래프 탐색, 동적 계획법 — 실행 과정을 시각화로 따라갑니다.",
   subtopics: [
     {
       name: "정렬 알고리즘",
-      description: "Bubble, Merge, Quick, Heap — 비교 기반 vs 비비교 기반, 안정성과 in-place까지.",
+      description:
+        "Bubble, Merge, Quick, Heap — 비교 기반 vs 비비교 기반, 안정성과 in-place까지.",
       href: "/algorithms/sorting",
     },
     {
@@ -19,70 +21,89 @@ const KO = {
     },
     {
       name: "동적 계획법",
-      description: "Fibonacci, Knapsack, LCS — 점화식 4단계와 Top-down vs Bottom-up.",
+      description:
+        "Fibonacci, Knapsack, LCS — 점화식 4단계와 Top-down vs Bottom-up.",
       href: "/algorithms/dynamic-programming",
     },
     {
       name: "분할 정복",
-      description: "재귀 트리와 부분 문제 분해 — Merge Sort, Quick Sort의 기반 아이디어.",
+      description:
+        "재귀 트리와 부분 문제 분해 — Merge Sort, Quick Sort의 기반 아이디어.",
+      href: "/algorithms/divide-and-conquer",
     },
     {
       name: "탐욕 알고리즘",
-      description: "Dijkstra, Prim, Activity Selection — 국소 선택이 전역 최적이 되는 조건.",
+      description:
+        "Dijkstra, Prim, Activity Selection — 국소 선택이 전역 최적이 되는 조건.",
+      href: "/algorithms/greedy",
     },
     {
       name: "백트래킹",
       description: "N-Queens, Sudoku — 탐색 트리의 가지치기.",
+      href: "/algorithms/backtracking",
     },
     {
       name: "문자열 알고리즘",
       description: "KMP, Rabin-Karp — 패턴 매칭 단계별.",
+      href: "/algorithms/string-algorithms",
     },
     {
       name: "최단 경로",
       description: "Bellman-Ford vs Dijkstra — 음수 간선과 relaxation.",
+      href: "/algorithms/shortest-path",
     },
   ],
 };
 
 const EN = {
   title: "Algorithms",
-  description: "Sorting, graph traversal, dynamic programming — watch them run step by step.",
+  description:
+    "Sorting, graph traversal, dynamic programming — watch them run step by step.",
   subtopics: [
     {
       name: "Sorting Algorithms",
-      description: "Bubble, Merge, Quick, Heap — comparison vs non-comparison, stability and in-place.",
+      description:
+        "Bubble, Merge, Quick, Heap — comparison vs non-comparison, stability and in-place.",
       href: "/algorithms/sorting",
     },
     {
       name: "Graph Traversal",
-      description: "BFS and DFS, topological sort, Dijkstra — the two paths of queues and stacks.",
+      description:
+        "BFS and DFS, topological sort, Dijkstra — the two paths of queues and stacks.",
       href: "/algorithms/graphs",
     },
     {
       name: "Dynamic Programming",
-      description: "Fibonacci, Knapsack, LCS — the 4 steps of recurrence and top-down vs bottom-up.",
+      description:
+        "Fibonacci, Knapsack, LCS — the 4 steps of recurrence and top-down vs bottom-up.",
       href: "/algorithms/dynamic-programming",
     },
     {
       name: "Divide & Conquer",
-      description: "Recursion trees and subproblem breakdown — the idea behind Merge and Quick.",
+      description:
+        "Recursion trees and subproblem breakdown — the idea behind Merge and Quick.",
+      href: "/algorithms/divide-and-conquer",
     },
     {
       name: "Greedy Algorithms",
-      description: "Dijkstra, Prim, activity selection — when local choices yield global optima.",
+      description:
+        "Dijkstra, Prim, activity selection — when local choices yield global optima.",
+      href: "/algorithms/greedy",
     },
     {
       name: "Backtracking",
       description: "N-Queens, Sudoku — pruning the search tree.",
+      href: "/algorithms/backtracking",
     },
     {
       name: "String Algorithms",
       description: "KMP, Rabin-Karp — pattern matching step by step.",
+      href: "/algorithms/string-algorithms",
     },
     {
       name: "Shortest Path",
       description: "Bellman-Ford vs Dijkstra — negative edges and relaxation.",
+      href: "/algorithms/shortest-path",
     },
   ],
 };

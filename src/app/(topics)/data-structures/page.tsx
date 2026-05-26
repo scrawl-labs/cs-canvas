@@ -29,11 +29,13 @@ const KO = {
     },
     {
       name: "트라이 (Tries)",
-      description: "접두사 트리 — 자동완성과 검색 강조.",
+      description: "접두사 트리 — 자동완성, 사전, IP 라우팅의 기반.",
+      href: "/data-structures/tries",
     },
     {
       name: "그래프",
       description: "인접 리스트 vs 행렬 — 메모리 레이아웃과 순회를 나란히.",
+      href: "/data-structures/graphs",
     },
   ],
 };
@@ -64,11 +66,13 @@ const EN = {
     },
     {
       name: "Tries",
-      description: "Prefix trees — autocomplete and search highlighted.",
+      description: "Prefix trees — autocomplete, dictionaries, IP routing.",
+      href: "/data-structures/tries",
     },
     {
       name: "Graphs",
       description: "Adjacency list vs matrix — memory layout and traversal side by side.",
+      href: "/data-structures/graphs",
     },
   ],
 };

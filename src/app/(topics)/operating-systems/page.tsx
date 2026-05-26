@@ -24,11 +24,13 @@ const KO = {
     },
     {
       name: "동기화",
-      description: "Mutex, Semaphore, Monitor — 경쟁 상태 시각화.",
+      description: "Race condition, Mutex, Semaphore, Monitor — Producer-Consumer까지.",
+      href: "/operating-systems/synchronization",
     },
     {
       name: "가상 메모리",
-      description: "Page fault, TLB hit/miss — working set 애니메이션.",
+      description: "Demand Paging, Working Set, Thrashing, Swap — 디스크가 RAM의 연장.",
+      href: "/operating-systems/virtual-memory",
     },
   ],
 };
@@ -54,11 +56,13 @@ const EN = {
     },
     {
       name: "Synchronization",
-      description: "Mutex, semaphores, monitors — race conditions visualized.",
+      description: "Race conditions, Mutex, Semaphore, Monitor — through Producer-Consumer.",
+      href: "/operating-systems/synchronization",
     },
     {
       name: "Virtual Memory",
-      description: "Page faults, TLB hits/misses — working set animated.",
+      description: "Demand Paging, Working Set, Thrashing, Swap — disk as RAM extension.",
+      href: "/operating-systems/virtual-memory",
     },
   ],
 };

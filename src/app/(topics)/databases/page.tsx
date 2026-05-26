@@ -5,7 +5,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const KO = {
   title: "데이터베이스",
-  description: "B-트리, 트랜잭션, 조인 — 내부에서 무슨 일이 일어나는지 이해하기.",
+  description:
+    "B-트리, 트랜잭션, 조인 — 내부에서 무슨 일이 일어나는지 이해하기.",
   subtopics: [
     {
       name: "B-Tree 인덱스",
@@ -30,6 +31,7 @@ const KO = {
     {
       name: "쿼리 실행 계획",
       description: "파스 트리에서 실행 계획까지 — 연산자 파이프라인 표시.",
+      href: "/databases/query-execution-plan",
     },
   ],
 };
@@ -40,27 +42,32 @@ const EN = {
   subtopics: [
     {
       name: "B-Tree Index",
-      description: "Insert and split operations — node structure updated visually.",
+      description:
+        "Insert and split operations — node structure updated visually.",
       href: "/databases/b-tree",
     },
     {
       name: "Transactions & ACID",
-      description: "Commit, rollback, isolation levels — concurrent txn timelines.",
+      description:
+        "Commit, rollback, isolation levels — concurrent txn timelines.",
       href: "/databases/transactions",
     },
     {
       name: "Join Algorithms",
-      description: "Nested loop, hash join, merge join — cost model side by side.",
+      description:
+        "Nested loop, hash join, merge join — cost model side by side.",
       href: "/databases/joins",
     },
     {
       name: "Normalization",
-      description: "1NF → 3NF decomposition — functional dependencies and update anomalies.",
+      description:
+        "1NF → 3NF decomposition — functional dependencies and update anomalies.",
       href: "/databases/normalization",
     },
     {
       name: "Query Execution Plan",
       description: "Parse tree to execution plan — operator pipeline shown.",
+      href: "/databases/query-execution-plan",
     },
   ],
 };
