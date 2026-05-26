@@ -40,15 +40,17 @@ const KO = {
   ],
   naive: {
     title: "Naive 알고리즘",
-    code: `function naive_search(T, P):
-    n, m = len(T), len(P)
-    for i in range(n - m + 1):
-        j = 0
-        while j < m and T[i+j] == P[j]:
-            j += 1
-        if j == m:
-            return i  # 매칭 위치
-    return -1`,
+    code: `int naiveSearch(String T, String P) {
+    int n = T.length(), m = P.length();
+    for (int i = 0; i <= n - m; i++) {
+        int j = 0;
+        while (j < m && T.charAt(i + j) == P.charAt(j)) {
+            j++;
+        }
+        if (j == m) return i;            // 매칭 위치
+    }
+    return -1;
+}`,
     cost: "최악 O(nm). 'AAA...AB' 패턴에서 매번 마지막 글자만 다름 → 매 위치마다 m번 비교.",
   },
   kmp: {
@@ -66,21 +68,26 @@ const KO = {
   },
   rabinkarp: {
     title: "Rabin-Karp — Rolling Hash",
-    code: `# 해시: h(S) = (S[0]*b^(m-1) + S[1]*b^(m-2) + ... + S[m-1]) mod p
-# Rolling: 윈도우 한 칸 이동 시 O(1)에 새 해시 계산
-new_hash = (old_hash - T[i]*b^(m-1)) * b + T[i+m]
-new_hash %= p
+    code: `// 해시: h(S) = (S[0]*b^(m-1) + S[1]*b^(m-2) + ... + S[m-1]) mod p
+// Rolling: 윈도우 한 칸 이동 시 O(1)에 새 해시 계산
+// newHash = ((oldHash - T[i]*b^(m-1)) * b + T[i+m]) mod p
 
-function rabin_karp(T, P):
-    pattern_hash = hash(P)
-    window_hash = hash(T[0..m-1])
-    for i in range(n - m + 1):
-        if window_hash == pattern_hash:
-            if T[i..i+m-1] == P:        # 해시 충돌 확인
-                return i
-        if i < n - m:
-            window_hash = roll(window_hash, T[i], T[i+m])
-    return -1`,
+int rabinKarp(String T, String P) {
+    int n = T.length(), m = P.length();
+    long patternHash = hash(P);
+    long windowHash = hash(T.substring(0, m));
+    for (int i = 0; i <= n - m; i++) {
+        if (windowHash == patternHash) {
+            if (T.substring(i, i + m).equals(P)) {   // 해시 충돌 확인
+                return i;
+            }
+        }
+        if (i < n - m) {
+            windowHash = roll(windowHash, T.charAt(i), T.charAt(i + m));
+        }
+    }
+    return -1;
+}`,
     cost: "평균 O(n+m). 최악(모든 해시 충돌) O(nm). 여러 패턴 검색에 효율적.",
   },
   comparison: {
@@ -157,15 +164,17 @@ const EN = {
   ],
   naive: {
     title: "Naive Algorithm",
-    code: `function naive_search(T, P):
-    n, m = len(T), len(P)
-    for i in range(n - m + 1):
-        j = 0
-        while j < m and T[i+j] == P[j]:
-            j += 1
-        if j == m:
-            return i  # found
-    return -1`,
+    code: `int naiveSearch(String T, String P) {
+    int n = T.length(), m = P.length();
+    for (int i = 0; i <= n - m; i++) {
+        int j = 0;
+        while (j < m && T.charAt(i + j) == P.charAt(j)) {
+            j++;
+        }
+        if (j == m) return i;            // found
+    }
+    return -1;
+}`,
     cost: "Worst O(nm). On 'AAA...AB' patterns each starting position compares m characters.",
   },
   kmp: {
@@ -183,21 +192,26 @@ const EN = {
   },
   rabinkarp: {
     title: "Rabin-Karp — Rolling Hash",
-    code: `# hash: h(S) = (S[0]*b^(m-1) + S[1]*b^(m-2) + ... + S[m-1]) mod p
-# Rolling: shifting the window updates the hash in O(1)
-new_hash = (old_hash - T[i]*b^(m-1)) * b + T[i+m]
-new_hash %= p
+    code: `// hash: h(S) = (S[0]*b^(m-1) + S[1]*b^(m-2) + ... + S[m-1]) mod p
+// Rolling: shifting the window updates the hash in O(1)
+// newHash = ((oldHash - T[i]*b^(m-1)) * b + T[i+m]) mod p
 
-function rabin_karp(T, P):
-    pattern_hash = hash(P)
-    window_hash = hash(T[0..m-1])
-    for i in range(n - m + 1):
-        if window_hash == pattern_hash:
-            if T[i..i+m-1] == P:        # verify (collision check)
-                return i
-        if i < n - m:
-            window_hash = roll(window_hash, T[i], T[i+m])
-    return -1`,
+int rabinKarp(String T, String P) {
+    int n = T.length(), m = P.length();
+    long patternHash = hash(P);
+    long windowHash = hash(T.substring(0, m));
+    for (int i = 0; i <= n - m; i++) {
+        if (windowHash == patternHash) {
+            if (T.substring(i, i + m).equals(P)) {   // verify (collision check)
+                return i;
+            }
+        }
+        if (i < n - m) {
+            windowHash = roll(windowHash, T.charAt(i), T.charAt(i + m));
+        }
+    }
+    return -1;
+}`,
     cost: "Average O(n+m). Worst (every hash collides) O(nm). Great for multi-pattern search.",
   },
   comparison: {

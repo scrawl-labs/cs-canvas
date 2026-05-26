@@ -45,69 +45,94 @@ const KO = {
   ],
   bfsCode: {
     title: "BFS 최단 경로",
-    code: `from collections import deque
-def bfs_shortest(graph, src):
-    dist = [INF] * n
-    dist[src] = 0
-    queue = deque([src])
-    while queue:
-        u = queue.popleft()
-        for v in graph[u]:
-            if dist[v] == INF:
-                dist[v] = dist[u] + 1
-                queue.append(v)
-    return dist`,
+    code: `int[] bfsShortest(List<List<Integer>> graph, int src, int n) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    Queue<Integer> queue = new ArrayDeque<>();
+    queue.offer(src);
+    while (!queue.isEmpty()) {
+        int u = queue.poll();
+        for (int v : graph.get(u)) {
+            if (dist[v] == Integer.MAX_VALUE) {
+                dist[v] = dist[u] + 1;
+                queue.offer(v);
+            }
+        }
+    }
+    return dist;
+}`,
     note: "모든 간선이 같은 가중치이므로 큐에서 꺼낸 순서가 거리 순.",
   },
   dijkstraCode: {
     title: "Dijkstra — 우선순위 큐 구현",
-    code: `import heapq
-def dijkstra(graph, src):
-    dist = [INF] * n
-    dist[src] = 0
-    pq = [(0, src)]
-    while pq:
-        d, u = heapq.heappop(pq)
-        if d > dist[u]:
-            continue            # 이미 더 짧은 경로 발견됨
-        for v, w in graph[u]:
-            if dist[u] + w < dist[v]:
-                dist[v] = dist[u] + w
-                heapq.heappush(pq, (dist[v], v))
-    return dist`,
+    code: `int[] dijkstra(List<List<int[]>> graph, int src, int n) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+    pq.offer(new int[]{0, src});
+    while (!pq.isEmpty()) {
+        int[] cur = pq.poll();
+        int d = cur[0], u = cur[1];
+        if (d > dist[u]) continue;     // 이미 더 짧은 경로 발견됨
+        for (int[] edge : graph.get(u)) {
+            int v = edge[0], w = edge[1];
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.offer(new int[]{dist[v], v});
+            }
+        }
+    }
+    return dist;
+}`,
     note: "Lazy 방식: 같은 노드가 PQ에 여러 번 들어가도 첫 번째만 유효. O((V+E) log V).",
   },
   bellmanFord: {
     title: "Bellman-Ford — V-1 패스 + 음수 사이클 검출",
-    code: `def bellman_ford(edges, n, src):
-    dist = [INF] * n
-    dist[src] = 0
-    for _ in range(n - 1):              # V-1번 relax
-        for u, v, w in edges:
-            if dist[u] != INF and dist[u] + w < dist[v]:
-                dist[v] = dist[u] + w
-    # 음수 사이클 검사: V번째에도 갱신되면 존재
-    for u, v, w in edges:
-        if dist[u] != INF and dist[u] + w < dist[v]:
-            return None  # 음수 사이클
-    return dist`,
-    note: "음수 가중치 OK. 음수 사이클이 있으면 최단 경로 정의 불가 → None 반환.",
+    code: `int[] bellmanFord(int[][] edges, int n, int src) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    for (int i = 0; i < n - 1; i++) {        // V-1번 relax
+        for (int[] e : edges) {
+            int u = e[0], v = e[1], w = e[2];
+            if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+            }
+        }
+    }
+    // 음수 사이클 검사: V번째에도 갱신되면 존재
+    for (int[] e : edges) {
+        int u = e[0], v = e[1], w = e[2];
+        if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+            return null;                        // 음수 사이클
+        }
+    }
+    return dist;
+}`,
+    note: "음수 가중치 OK. 음수 사이클이 있으면 최단 경로 정의 불가 → null 반환.",
   },
   floyd: {
     title: "Floyd-Warshall — DP",
-    code: `def floyd_warshall(n, edges):
-    dist = [[INF] * n for _ in range(n)]
-    for i in range(n):
-        dist[i][i] = 0
-    for u, v, w in edges:
-        dist[u][v] = w
-    # k: 중간 정점을 0..k까지 허용
-    for k in range(n):
-        for i in range(n):
-            for j in range(n):
-                if dist[i][k] + dist[k][j] < dist[i][j]:
-                    dist[i][j] = dist[i][k] + dist[k][j]
-    return dist`,
+    code: `int[][] floydWarshall(int n, int[][] edges) {
+    int INF = Integer.MAX_VALUE / 2;          // 오버플로 방지
+    int[][] dist = new int[n][n];
+    for (int[] row : dist) Arrays.fill(row, INF);
+    for (int i = 0; i < n; i++) dist[i][i] = 0;
+    for (int[] e : edges) dist[e[0]][e[1]] = e[2];
+    // k: 중간 정점을 0..k까지 허용
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+    return dist;
+}`,
     note: "삼중 루프, O(V³). 메모리 O(V²). 노드 수가 작을 때 (수백 정도) 가장 깔끔.",
   },
   comparison: {
@@ -189,69 +214,94 @@ const EN = {
   ],
   bfsCode: {
     title: "BFS Shortest Path",
-    code: `from collections import deque
-def bfs_shortest(graph, src):
-    dist = [INF] * n
-    dist[src] = 0
-    queue = deque([src])
-    while queue:
-        u = queue.popleft()
-        for v in graph[u]:
-            if dist[v] == INF:
-                dist[v] = dist[u] + 1
-                queue.append(v)
-    return dist`,
+    code: `int[] bfsShortest(List<List<Integer>> graph, int src, int n) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    Queue<Integer> queue = new ArrayDeque<>();
+    queue.offer(src);
+    while (!queue.isEmpty()) {
+        int u = queue.poll();
+        for (int v : graph.get(u)) {
+            if (dist[v] == Integer.MAX_VALUE) {
+                dist[v] = dist[u] + 1;
+                queue.offer(v);
+            }
+        }
+    }
+    return dist;
+}`,
     note: "All edges have equal weight, so pop order = distance order.",
   },
   dijkstraCode: {
     title: "Dijkstra — Priority Queue",
-    code: `import heapq
-def dijkstra(graph, src):
-    dist = [INF] * n
-    dist[src] = 0
-    pq = [(0, src)]
-    while pq:
-        d, u = heapq.heappop(pq)
-        if d > dist[u]:
-            continue            # already found a shorter path
-        for v, w in graph[u]:
-            if dist[u] + w < dist[v]:
-                dist[v] = dist[u] + w
-                heapq.heappush(pq, (dist[v], v))
-    return dist`,
+    code: `int[] dijkstra(List<List<int[]>> graph, int src, int n) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+    pq.offer(new int[]{0, src});
+    while (!pq.isEmpty()) {
+        int[] cur = pq.poll();
+        int d = cur[0], u = cur[1];
+        if (d > dist[u]) continue;     // already found a shorter path
+        for (int[] edge : graph.get(u)) {
+            int v = edge[0], w = edge[1];
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.offer(new int[]{dist[v], v});
+            }
+        }
+    }
+    return dist;
+}`,
     note: "Lazy: same node may sit in the PQ multiple times; only the first pop matters. O((V+E) log V).",
   },
   bellmanFord: {
     title: "Bellman-Ford — V-1 Passes + Cycle Check",
-    code: `def bellman_ford(edges, n, src):
-    dist = [INF] * n
-    dist[src] = 0
-    for _ in range(n - 1):              # V-1 relaxations
-        for u, v, w in edges:
-            if dist[u] != INF and dist[u] + w < dist[v]:
-                dist[v] = dist[u] + w
-    # check for negative cycle: V-th pass would still update
-    for u, v, w in edges:
-        if dist[u] != INF and dist[u] + w < dist[v]:
-            return None  # negative cycle
-    return dist`,
-    note: "Negatives OK. With a negative cycle, shortest path is undefined → return None.",
+    code: `int[] bellmanFord(int[][] edges, int n, int src) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[src] = 0;
+    for (int i = 0; i < n - 1; i++) {        // V-1 relaxations
+        for (int[] e : edges) {
+            int u = e[0], v = e[1], w = e[2];
+            if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+            }
+        }
+    }
+    // check for negative cycle: V-th pass would still update
+    for (int[] e : edges) {
+        int u = e[0], v = e[1], w = e[2];
+        if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+            return null;                        // negative cycle
+        }
+    }
+    return dist;
+}`,
+    note: "Negatives OK. With a negative cycle, shortest path is undefined → return null.",
   },
   floyd: {
     title: "Floyd-Warshall — DP",
-    code: `def floyd_warshall(n, edges):
-    dist = [[INF] * n for _ in range(n)]
-    for i in range(n):
-        dist[i][i] = 0
-    for u, v, w in edges:
-        dist[u][v] = w
-    # k: intermediates allowed from 0..k
-    for k in range(n):
-        for i in range(n):
-            for j in range(n):
-                if dist[i][k] + dist[k][j] < dist[i][j]:
-                    dist[i][j] = dist[i][k] + dist[k][j]
-    return dist`,
+    code: `int[][] floydWarshall(int n, int[][] edges) {
+    int INF = Integer.MAX_VALUE / 2;          // avoid overflow
+    int[][] dist = new int[n][n];
+    for (int[] row : dist) Arrays.fill(row, INF);
+    for (int i = 0; i < n; i++) dist[i][i] = 0;
+    for (int[] e : edges) dist[e[0]][e[1]] = e[2];
+    // k: intermediates allowed from 0..k
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+    return dist;
+}`,
     note: "Triple loop, O(V³). Memory O(V²). Cleanest for small V (a few hundred).",
   },
   comparison: {

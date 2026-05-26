@@ -53,40 +53,50 @@ const KO = {
       {
         name: "단순 재귀",
         complexity: "O(2ⁿ) 시간",
-        code: `def fib(n):
-    if n < 2: return n
-    return fib(n-1) + fib(n-2)`,
+        code: `int fib(int n) {
+    if (n < 2) return n;
+    return fib(n - 1) + fib(n - 2);
+}`,
         note: "fib(5)를 계산할 때 fib(2)를 5번 호출 — 중복 폭증",
       },
       {
         name: "Top-down (Memo)",
         complexity: "O(n) 시간, O(n) 공간",
-        code: `memo = {}
-def fib(n):
-    if n in memo: return memo[n]
-    if n < 2: return n
-    memo[n] = fib(n-1) + fib(n-2)
-    return memo[n]`,
+        code: `Map<Integer, Integer> memo = new HashMap<>();
+int fib(int n) {
+    if (memo.containsKey(n)) return memo.get(n);
+    if (n < 2) return n;
+    int result = fib(n - 1) + fib(n - 2);
+    memo.put(n, result);
+    return result;
+}`,
         note: "한 번 계산한 값은 캐시에서 즉시 반환",
       },
       {
         name: "Bottom-up (Table)",
         complexity: "O(n) 시간, O(n) 공간",
-        code: `def fib(n):
-    dp = [0, 1]
-    for i in range(2, n+1):
-        dp.append(dp[i-1] + dp[i-2])
-    return dp[n]`,
+        code: `int fib(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = 0; dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    return dp[n];
+}`,
         note: "작은 값부터 위로 — 재귀 호출 없음",
       },
       {
         name: "공간 최적화",
         complexity: "O(n) 시간, O(1) 공간",
-        code: `def fib(n):
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a + b
-    return a`,
+        code: `int fib(int n) {
+    int a = 0, b = 1;
+    for (int i = 0; i < n; i++) {
+        int next = a + b;
+        a = b;
+        b = next;
+    }
+    return a;
+}`,
         note: "직전 두 값만 필요 — 배열 불필요",
       },
     ],
@@ -206,40 +216,50 @@ const EN = {
       {
         name: "Naive Recursion",
         complexity: "O(2ⁿ) time",
-        code: `def fib(n):
-    if n < 2: return n
-    return fib(n-1) + fib(n-2)`,
+        code: `int fib(int n) {
+    if (n < 2) return n;
+    return fib(n - 1) + fib(n - 2);
+}`,
         note: "fib(5) calls fib(2) five times — duplication explodes",
       },
       {
         name: "Top-down (Memo)",
         complexity: "O(n) time, O(n) space",
-        code: `memo = {}
-def fib(n):
-    if n in memo: return memo[n]
-    if n < 2: return n
-    memo[n] = fib(n-1) + fib(n-2)
-    return memo[n]`,
+        code: `Map<Integer, Integer> memo = new HashMap<>();
+int fib(int n) {
+    if (memo.containsKey(n)) return memo.get(n);
+    if (n < 2) return n;
+    int result = fib(n - 1) + fib(n - 2);
+    memo.put(n, result);
+    return result;
+}`,
         note: "Once computed, values return from the cache instantly",
       },
       {
         name: "Bottom-up (Table)",
         complexity: "O(n) time, O(n) space",
-        code: `def fib(n):
-    dp = [0, 1]
-    for i in range(2, n+1):
-        dp.append(dp[i-1] + dp[i-2])
-    return dp[n]`,
+        code: `int fib(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = 0; dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    return dp[n];
+}`,
         note: "From small to big — no recursion",
       },
       {
         name: "Space Optimized",
         complexity: "O(n) time, O(1) space",
-        code: `def fib(n):
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a + b
-    return a`,
+        code: `int fib(int n) {
+    int a = 0, b = 1;
+    for (int i = 0; i < n; i++) {
+        int next = a + b;
+        a = b;
+        b = next;
+    }
+    return a;
+}`,
         note: "Only the last two values matter — no array needed",
       },
     ],

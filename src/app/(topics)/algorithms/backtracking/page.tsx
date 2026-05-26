@@ -45,15 +45,19 @@ const KO = {
   ],
   pattern: {
     title: "Backtracking 일반 패턴",
-    code: `function backtrack(state):
-    if is_solution(state):
-        record(state)
-        return
-    for choice in choices(state):
-        if is_valid(state, choice):       # 제약 검사 (pruning)
-            state.add(choice)
-            backtrack(state)              # 재귀
-            state.remove(choice)          # 백트랙 (상태 복원)`,
+    code: `void backtrack(State state) {
+    if (isSolution(state)) {
+        record(state);
+        return;
+    }
+    for (Choice choice : choices(state)) {
+        if (isValid(state, choice)) {     // 제약 검사 (pruning)
+            state.add(choice);
+            backtrack(state);             // 재귀
+            state.remove(choice);         // 백트랙 (상태 복원)
+        }
+    }
+}`,
   },
   nqueens: {
     title: "4-Queens 탐색 트리 일부",
@@ -114,18 +118,21 @@ const KO = {
   pruning: {
     title: "가지치기 예시 — Sum이 K를 넘어가면 중단",
     desc: "배열에서 합이 K인 부분집합 찾기. 현재 합이 이미 K 초과면 더 추가해도 의미 없음 → 즉시 백트랙.",
-    code: `function backtrack(idx, current_sum, subset):
-    if current_sum == K:
-        record(subset)
-        return
-    if current_sum > K or idx == n:    # ★ 가지치기
-        return
-    # 포함
-    subset.add(arr[idx])
-    backtrack(idx+1, current_sum + arr[idx], subset)
-    subset.remove(arr[idx])
-    # 미포함
-    backtrack(idx+1, current_sum, subset)`,
+    code: `void backtrack(int idx, int currentSum, List<Integer> subset) {
+    if (currentSum == K) {
+        record(subset);
+        return;
+    }
+    if (currentSum > K || idx == n) {   // ★ 가지치기
+        return;
+    }
+    // 포함
+    subset.add(arr[idx]);
+    backtrack(idx + 1, currentSum + arr[idx], subset);
+    subset.remove(subset.size() - 1);
+    // 미포함
+    backtrack(idx + 1, currentSum, subset);
+}`,
   },
   summary: {
     title: "핵심 개념 정리",
@@ -183,15 +190,19 @@ const EN = {
   ],
   pattern: {
     title: "General Backtracking Pattern",
-    code: `function backtrack(state):
-    if is_solution(state):
-        record(state)
-        return
-    for choice in choices(state):
-        if is_valid(state, choice):       # constraint check (pruning)
-            state.add(choice)
-            backtrack(state)              # recurse
-            state.remove(choice)          # backtrack (restore)`,
+    code: `void backtrack(State state) {
+    if (isSolution(state)) {
+        record(state);
+        return;
+    }
+    for (Choice choice : choices(state)) {
+        if (isValid(state, choice)) {     // constraint check (pruning)
+            state.add(choice);
+            backtrack(state);             // recurse
+            state.remove(choice);         // backtrack (restore)
+        }
+    }
+}`,
   },
   nqueens: {
     title: "4-Queens — partial search tree",
@@ -252,18 +263,21 @@ const EN = {
   pruning: {
     title: "Pruning Example — stop when sum exceeds K",
     desc: "Find subsets summing to K. If the running sum already exceeds K, adding more can't help → backtrack immediately.",
-    code: `function backtrack(idx, current_sum, subset):
-    if current_sum == K:
-        record(subset)
-        return
-    if current_sum > K or idx == n:    # ★ prune
-        return
-    # include
-    subset.add(arr[idx])
-    backtrack(idx+1, current_sum + arr[idx], subset)
-    subset.remove(arr[idx])
-    # exclude
-    backtrack(idx+1, current_sum, subset)`,
+    code: `void backtrack(int idx, int currentSum, List<Integer> subset) {
+    if (currentSum == K) {
+        record(subset);
+        return;
+    }
+    if (currentSum > K || idx == n) {   // ★ prune
+        return;
+    }
+    // include
+    subset.add(arr[idx]);
+    backtrack(idx + 1, currentSum + arr[idx], subset);
+    subset.remove(subset.size() - 1);
+    // exclude
+    backtrack(idx + 1, currentSum, subset);
+}`,
   },
   summary: {
     title: "Key Concepts",

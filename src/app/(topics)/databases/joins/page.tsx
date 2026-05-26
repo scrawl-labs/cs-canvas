@@ -58,14 +58,19 @@ const KO = {
   },
   nestedLoop: {
     title: "Nested Loop Join — 의사 코드",
-    code: `for r in OuterTable:        // 왼쪽 (작은 쪽이 좋음)
-    for s in InnerTable:    // 오른쪽
-        if r.key == s.key:
-            output(r, s)
-# 인덱스 있을 때:
-for r in OuterTable:
-    for s in IndexLookup(InnerTable, r.key):
-        output(r, s)`,
+    code: `for (Row r : outer) {                       // 왼쪽 (작은 쪽이 좋음)
+    for (Row s : inner) {                   // 오른쪽
+        if (r.key.equals(s.key)) {
+            output(r, s);
+        }
+    }
+}
+// 인덱스 있을 때:
+for (Row r : outer) {
+    for (Row s : indexLookup(inner, r.key)) {
+        output(r, s);
+    }
+}`,
     cost: "기본 O(N × M), 인덱스 활용 O(N × log M)",
     when: "작은 outer + 인덱스 있는 inner. 매우 적은 row일 때 항상 후보.",
   },
@@ -90,18 +95,21 @@ for r in OuterTable:
   },
   sortMerge: {
     title: "Sort-Merge Join — 두 포인터로 훑기",
-    code: `sortedR = sort(R, by R.key)
-sortedS = sort(S, by S.key)
-i = j = 0
-while i < |R| and j < |S|:
-    if R[i].key < S[j].key:
-        i += 1
-    elif R[i].key > S[j].key:
-        j += 1
-    else:  # 매칭
-        output(R[i], S[j])
+    code: `List<Row> sortedR = sort(R, Comparator.comparing(r -> r.key));
+List<Row> sortedS = sort(S, Comparator.comparing(s -> s.key));
+int i = 0, j = 0;
+while (i < sortedR.size() && j < sortedS.size()) {
+    int cmp = sortedR.get(i).key.compareTo(sortedS.get(j).key);
+    if (cmp < 0) {
+        i++;
+    } else if (cmp > 0) {
+        j++;
+    } else {                                // 매칭
+        output(sortedR.get(i), sortedS.get(j));
         // 중복 키 처리
-        i += 1  (or j += 1)`,
+        i++;   // 또는 j++
+    }
+}`,
     cost: "O((N+M) log (N+M)) — 정렬 비용 지배. 이미 정렬돼 있으면 O(N+M).",
     when: "인덱스로 정렬된 데이터, 범위 조인(<, > 같은 비동등 조건도 가능).",
   },
@@ -206,14 +214,19 @@ const EN = {
   },
   nestedLoop: {
     title: "Nested Loop Join — pseudocode",
-    code: `for r in OuterTable:        // left (smaller is better)
-    for s in InnerTable:    // right
-        if r.key == s.key:
-            output(r, s)
-# with index on inner:
-for r in OuterTable:
-    for s in IndexLookup(InnerTable, r.key):
-        output(r, s)`,
+    code: `for (Row r : outer) {                       // left (smaller is better)
+    for (Row s : inner) {                   // right
+        if (r.key.equals(s.key)) {
+            output(r, s);
+        }
+    }
+}
+// with index on inner:
+for (Row r : outer) {
+    for (Row s : indexLookup(inner, r.key)) {
+        output(r, s);
+    }
+}`,
     cost: "Plain O(N × M), with index O(N × log M)",
     when: "Small outer + indexed inner. Always a candidate when row count is tiny.",
   },
@@ -238,18 +251,21 @@ for r in OuterTable:
   },
   sortMerge: {
     title: "Sort-Merge Join — Two-Pointer Merge",
-    code: `sortedR = sort(R, by R.key)
-sortedS = sort(S, by S.key)
-i = j = 0
-while i < |R| and j < |S|:
-    if R[i].key < S[j].key:
-        i += 1
-    elif R[i].key > S[j].key:
-        j += 1
-    else:  # match
-        output(R[i], S[j])
+    code: `List<Row> sortedR = sort(R, Comparator.comparing(r -> r.key));
+List<Row> sortedS = sort(S, Comparator.comparing(s -> s.key));
+int i = 0, j = 0;
+while (i < sortedR.size() && j < sortedS.size()) {
+    int cmp = sortedR.get(i).key.compareTo(sortedS.get(j).key);
+    if (cmp < 0) {
+        i++;
+    } else if (cmp > 0) {
+        j++;
+    } else {                                // match
+        output(sortedR.get(i), sortedS.get(j));
         // handle duplicates
-        i += 1  (or j += 1)`,
+        i++;   // or j++
+    }
+}`,
     cost: "O((N+M) log (N+M)) — sort dominates. Already sorted → O(N+M).",
     when: "Index-sorted data, range joins (works with <, > too — not just =).",
   },

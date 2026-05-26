@@ -404,10 +404,13 @@ export default function HeapsPage() {
               </tbody>
             </table>
             <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <pre className="text-[10px] font-mono text-zinc-400 leading-relaxed">{`function buildHeap(arr):
-  for i from (n/2 - 1) down to 0:
-    siftDown(arr, i, n)
-# total work bounded by Σ h × (n / 2^(h+1)) = O(n)`}</pre>
+              <pre className="text-[10px] font-mono text-zinc-400 leading-relaxed">{`void buildHeap(int[] arr) {
+    int n = arr.length;
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        siftDown(arr, i, n);
+    }
+}
+// total work bounded by Σ h × (n / 2^(h+1)) = O(n)`}</pre>
             </div>
           </div>
         </Section>

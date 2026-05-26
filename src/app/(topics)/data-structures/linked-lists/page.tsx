@@ -75,24 +75,29 @@ const KO = {
   },
   twoPointer: {
     title: "Two Pointer — 사이클 탐지 (Floyd)",
-    code: `def hasCycle(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next         # 1칸
-        fast = fast.next.next    # 2칸
-        if slow == fast:
-            return True          # 만남 → 사이클
-    return False`,
-    insight: "사이클이 있으면 fast가 slow를 한 바퀴 돌아 따라잡음. 사이클이 없으면 fast가 먼저 NULL 도달.",
+    code: `boolean hasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;         // 1칸
+        fast = fast.next.next;    // 2칸
+        if (slow == fast) {
+            return true;          // 만남 → 사이클
+        }
+    }
+    return false;
+}`,
+    insight: "사이클이 있으면 fast가 slow를 한 바퀴 돌아 따라잡음. 사이클이 없으면 fast가 먼저 null 도달.",
   },
   middleFinding: {
     title: "Two Pointer — 중앙 노드 찾기",
-    code: `def findMiddle(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-    return slow  # fast가 끝에 갔을 때 slow는 중앙`,
+    code: `ListNode findMiddle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow;  // fast가 끝에 갔을 때 slow는 중앙
+}`,
     insight: "한 번의 순회로 중앙 찾기 — 길이를 세는 두 번 순회보다 우아함.",
   },
   uses: {
@@ -201,24 +206,29 @@ const EN = {
   },
   twoPointer: {
     title: "Two Pointer — Cycle Detection (Floyd)",
-    code: `def hasCycle(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next         # 1 step
-        fast = fast.next.next    # 2 steps
-        if slow == fast:
-            return True          # met → cycle
-    return False`,
-    insight: "If a cycle exists, fast laps slow. No cycle → fast hits NULL first.",
+    code: `boolean hasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;         // 1 step
+        fast = fast.next.next;    // 2 steps
+        if (slow == fast) {
+            return true;          // met → cycle
+        }
+    }
+    return false;
+}`,
+    insight: "If a cycle exists, fast laps slow. No cycle → fast hits null first.",
   },
   middleFinding: {
     title: "Two Pointer — Find the Middle",
-    code: `def findMiddle(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-    return slow  # when fast is at end, slow is at middle`,
+    code: `ListNode findMiddle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow;  // when fast is at end, slow is at middle
+}`,
     insight: "One-pass middle find — more elegant than counting first.",
   },
   uses: {

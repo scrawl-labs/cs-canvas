@@ -420,15 +420,21 @@ F: [C]`}</pre>
               </tbody>
             </table>
             <div className="mt-4 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
-              <pre className="text-[10px] font-mono text-zinc-400">{`function bfs(start):
-  queue = [start]
-  visited = {start}
-  while queue is not empty:
-    node = queue.popleft()
-    for neighbor in node.neighbors:
-      if neighbor not in visited:
-        visited.add(neighbor)
-        queue.append(neighbor)`}</pre>
+              <pre className="text-[10px] font-mono text-zinc-400">{`void bfs(Node start) {
+    Queue<Node> queue = new ArrayDeque<>();
+    Set<Node> visited = new HashSet<>();
+    queue.offer(start);
+    visited.add(start);
+    while (!queue.isEmpty()) {
+        Node node = queue.poll();
+        for (Node neighbor : node.neighbors) {
+            if (!visited.contains(neighbor)) {
+                visited.add(neighbor);
+                queue.offer(neighbor);
+            }
+        }
+    }
+}`}</pre>
             </div>
           </div>
         </Section>
@@ -462,12 +468,15 @@ F: [C]`}</pre>
               </tbody>
             </table>
             <div className="mt-4 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
-              <pre className="text-[10px] font-mono text-zinc-400">{`function dfs(node, visited):
-  visited.add(node)
-  for neighbor in node.neighbors:
-    if neighbor not in visited:
-      dfs(neighbor, visited)
-  # finish time: post-order moment`}</pre>
+              <pre className="text-[10px] font-mono text-zinc-400">{`void dfs(Node node, Set<Node> visited) {
+    visited.add(node);
+    for (Node neighbor : node.neighbors) {
+        if (!visited.contains(neighbor)) {
+            dfs(neighbor, visited);
+        }
+    }
+    // finish time: post-order moment
+}`}</pre>
             </div>
           </div>
         </Section>

@@ -57,37 +57,40 @@ const KO = {
   },
   code: {
     title: "Trie 구현",
-    code: `class TrieNode:
-    def __init__(self):
-        self.children = {}    # char -> TrieNode
-        self.is_end = False
+    code: `class TrieNode {
+    Map<Character, TrieNode> children = new HashMap<>();
+    boolean isEnd = false;
+}
 
-class Trie:
-    def __init__(self):
-        self.root = TrieNode()
+class Trie {
+    private final TrieNode root = new TrieNode();
 
-    def insert(self, word):
-        node = self.root
-        for ch in word:
-            if ch not in node.children:
-                node.children[ch] = TrieNode()
-            node = node.children[ch]
-        node.is_end = True
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char ch : word.toCharArray()) {
+            node = node.children.computeIfAbsent(ch, k -> new TrieNode());
+        }
+        node.isEnd = true;
+    }
 
-    def search(self, word):
-        node = self._walk(word)
-        return node is not None and node.is_end
+    public boolean search(String word) {
+        TrieNode node = walk(word);
+        return node != null && node.isEnd;
+    }
 
-    def starts_with(self, prefix):
-        return self._walk(prefix) is not None
+    public boolean startsWith(String prefix) {
+        return walk(prefix) != null;
+    }
 
-    def _walk(self, s):
-        node = self.root
-        for ch in s:
-            if ch not in node.children:
-                return None
-            node = node.children[ch]
-        return node`,
+    private TrieNode walk(String s) {
+        TrieNode node = root;
+        for (char ch : s.toCharArray()) {
+            node = node.children.get(ch);
+            if (node == null) return null;
+        }
+        return node;
+    }
+}`,
   },
   comparison: {
     title: "Trie vs 다른 자료구조",
@@ -193,37 +196,40 @@ const EN = {
   },
   code: {
     title: "Trie Implementation",
-    code: `class TrieNode:
-    def __init__(self):
-        self.children = {}    # char -> TrieNode
-        self.is_end = False
+    code: `class TrieNode {
+    Map<Character, TrieNode> children = new HashMap<>();
+    boolean isEnd = false;
+}
 
-class Trie:
-    def __init__(self):
-        self.root = TrieNode()
+class Trie {
+    private final TrieNode root = new TrieNode();
 
-    def insert(self, word):
-        node = self.root
-        for ch in word:
-            if ch not in node.children:
-                node.children[ch] = TrieNode()
-            node = node.children[ch]
-        node.is_end = True
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char ch : word.toCharArray()) {
+            node = node.children.computeIfAbsent(ch, k -> new TrieNode());
+        }
+        node.isEnd = true;
+    }
 
-    def search(self, word):
-        node = self._walk(word)
-        return node is not None and node.is_end
+    public boolean search(String word) {
+        TrieNode node = walk(word);
+        return node != null && node.isEnd;
+    }
 
-    def starts_with(self, prefix):
-        return self._walk(prefix) is not None
+    public boolean startsWith(String prefix) {
+        return walk(prefix) != null;
+    }
 
-    def _walk(self, s):
-        node = self.root
-        for ch in s:
-            if ch not in node.children:
-                return None
-            node = node.children[ch]
-        return node`,
+    private TrieNode walk(String s) {
+        TrieNode node = root;
+        for (char ch : s.toCharArray()) {
+            node = node.children.get(ch);
+            if (node == null) return null;
+        }
+        return node;
+    }
+}`,
   },
   comparison: {
     title: "Trie vs Other Structures",

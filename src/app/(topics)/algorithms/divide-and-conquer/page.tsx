@@ -40,12 +40,17 @@ const KO = {
   ],
   steps: {
     title: "Divide & Conquer 패턴",
-    code: `function dac(problem):
-    if problem is small:
-        return solve_directly(problem)     # base case
-    subproblems = divide(problem)          # 1. Divide
-    sub_solutions = [dac(s) for s in subs] # 2. Conquer (재귀)
-    return combine(sub_solutions)          # 3. Combine`,
+    code: `Result dac(Problem problem) {
+    if (isSmall(problem)) {
+        return solveDirectly(problem);            // base case
+    }
+    List<Problem> subs = divide(problem);         // 1. Divide
+    List<Result> subSolutions = new ArrayList<>();
+    for (Problem s : subs) {                      // 2. Conquer (재귀)
+        subSolutions.add(dac(s));
+    }
+    return combine(subSolutions);                 // 3. Combine
+}`,
   },
   vs: {
     title: "Divide & Conquer vs DP",
@@ -119,12 +124,17 @@ const EN = {
   ],
   steps: {
     title: "The D&C Pattern",
-    code: `function dac(problem):
-    if problem is small:
-        return solve_directly(problem)     # base case
-    subproblems = divide(problem)          # 1. Divide
-    sub_solutions = [dac(s) for s in subs] # 2. Conquer (recurse)
-    return combine(sub_solutions)          # 3. Combine`,
+    code: `Result dac(Problem problem) {
+    if (isSmall(problem)) {
+        return solveDirectly(problem);            // base case
+    }
+    List<Problem> subs = divide(problem);         // 1. Divide
+    List<Result> subSolutions = new ArrayList<>();
+    for (Problem s : subs) {                      // 2. Conquer (recurse)
+        subSolutions.add(dac(s));
+    }
+    return combine(subSolutions);                 // 3. Combine
+}`,
   },
   vs: {
     title: "Divide & Conquer vs DP",
