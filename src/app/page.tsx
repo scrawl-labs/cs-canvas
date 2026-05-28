@@ -59,7 +59,7 @@ const topics = [
     icon: "🔧",
     color: "from-slate-500 to-gray-600",
     subtopics: ["CPU Pipeline", "Cache", "Memory"],
-    count: 3,
+    count: 5,
   },
 ];
 
