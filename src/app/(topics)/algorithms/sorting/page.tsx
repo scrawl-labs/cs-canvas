@@ -71,12 +71,105 @@ const KO = {
   },
   stability: {
     title: "안정 정렬(Stable Sort)이란?",
-    desc: "값이 같은 원소들의 상대적 순서가 정렬 후에도 유지되면 안정. 1차 정렬 후 2차 정렬할 때 중요합니다.",
+    desc: "정렬 키가 같은 원소들의 원래 순서가 정렬 후에도 유지되면 안정. 한 줄로: 같은 값이라 비교할 수 없을 때 tie-breaking을 원래 순서로 한다.",
     example: {
       before: ["(A,3)", "(B,1)", "(C,3)", "(D,2)"],
       stable: ["(B,1)", "(D,2)", "(A,3)", "(C,3)"],
       unstable: ["(B,1)", "(D,2)", "(C,3)", "(A,3)"],
     },
+    multiKey: {
+      title: "왜 중요한가 — 다중 기준 정렬",
+      desc: "1차로 가입일 정렬 → 2차로 나이 정렬을 한다고 가정. 2차 정렬이 안정이어야 '나이가 같은 사람끼리 가입일 순서'가 보존됨. 불안정이면 1차 정렬이 무의미해짐.",
+      code: `// 사용자 리스트
+[
+  {이름: "철수", 나이: 20, 가입일: "1일"},
+  {이름: "영희", 나이: 20, 가입일: "3일"},
+]
+// 가입일로 1차 정렬 (이미 정렬됨)
+// 나이로 2차 정렬
+
+안정:   [철수(20,1일), 영희(20,3일)]   ← 가입일 순 유지 ✓
+불안정: [영희(20,3일), 철수(20,1일)]   ← 1차 정렬 깨짐 ✗`,
+    },
+    primitiveVsObject: {
+      title: "primitive는 불안정 OK, 객체는 안정 필수",
+      primitive: "int, double 같은 원시 타입은 값이 곧 전부. [3, 1, 3]에서 두 개의 3은 구별 불가능 → 순서 바뀌어도 결과가 동일 → 불안정 OK. Java가 primitive에 Dual-Pivot Quick Sort 쓰는 이유.",
+      object: "객체는 정렬 키 외에 다른 필드가 있음. 키가 같아도 객체가 다르므로 순서가 바뀌면 의미가 달라짐 → 안정 필수. Java가 객체 배열에 Tim Sort 쓰는 이유.",
+    },
+    howStable: {
+      title: "어떻게 안정성을 보장하나",
+      desc: "Merge Sort의 병합 단계에서 같은 값일 때 왼쪽(원래 앞쪽) 먼저 넣음. `<` 가 아니라 `<=`를 쓰는 것 자체가 핵심.",
+      code: `while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {   // ★ 같을 때 왼쪽 먼저
+        result.add(left[i++]);   //   → 원래 순서 유지 (안정)
+    } else {
+        result.add(right[j++]);
+    }
+}
+// 만약 < 였다면? 같을 때 오른쪽 먼저 → 불안정`,
+    },
+    whyQuickUnstable: "Quick Sort가 불안정한 이유: pivot 기준으로 멀리 떨어진 원소끼리 swap하는 구조 자체가 같은 값의 상대 순서를 깨뜨림.",
+  },
+  timsort: {
+    title: "Tim Sort 깊이 보기",
+    intro: "Python의 Tim Peters가 2002년 고안. Merge Sort + Insertion Sort 하이브리드. Python/Java의 기본 정렬, JavaScript도 ES2019부터 안정 보장.",
+    keyIdea: "핵심 아이디어: '실제 데이터는 이미 부분적으로 정렬돼 있다'. 로그, 타임스탬프, 사용자 입력 — 완전 무작위인 경우는 드뭄.",
+    steps: [
+      {
+        n: "1",
+        title: "Run 탐색 — 이미 정렬된 구간 찾기",
+        code: `[3, 5, 7, 2, 4, 6, 1, 8, 9, 10]
+ └─────┘  └─────┘  └──────────┘
+  run1     run2       run3
+배열을 왼쪽부터 훑어 오름차순 run을 식별.
+내림차순 run은 뒤집어서 오름차순으로 변환.`,
+      },
+      {
+        n: "2",
+        title: "Insertion Sort로 minRun 확장",
+        code: `minRun = 32~64 (배열 크기에 따라 결정)
+짧은 run은 Insertion Sort로 minRun 크기까지 늘림.
+
+왜 Insertion Sort? — n이 작으면 의외로 가장 빠름:
+  • O(n²)이지만 n=32면 절대 연산 수가 적음 (~500회)
+  • 배열 순차 접근 → CPU 캐시 친화적
+  • 재귀 호출 오버헤드 0
+  • 이미 부분 정렬된 데이터엔 O(n)에 가까움`,
+      },
+      {
+        n: "3",
+        title: "Merge Sort로 run 병합",
+        code: `정렬된 run들끼리 Merge.
+  run1 + run2 → merged
+  merged + run3 → final
+이미 정렬된 구간을 합치므로 빠르고,
+같은 값일 땐 왼쪽(앞쪽) 우선 → 안정성 보장.`,
+      },
+    ],
+    performance: {
+      title: "왜 실제로 빠른가",
+      headers: ["입력 패턴", "Tim Sort", "비고"],
+      rows: [
+        ["완전 무작위", "O(n log n)", "Merge Sort와 동일"],
+        ["이미 정렬됨", "O(n)", "run 하나로 끝, 비교만 함"],
+        ["부분 정렬", "O(n log n)보다 훨씬 빠름", "실제 데이터의 일반적 패턴"],
+        ["역순 정렬", "O(n)", "내림차순 run을 뒤집으면 끝"],
+      ],
+    },
+    bigO: {
+      title: "Big-O만 보면 안 되는 이유",
+      desc: "n이 작을 때는 상수항이 지배하고, 같은 O(n log n)도 안정성·캐시 효율에서 갈린다. Tim Sort는 Insertion Sort의 'O(n²)인데 왜 써?'라는 의문에 답하는 좋은 예시.",
+      compareN10: `n = 10 기준 실제 비교 횟수:
+  Merge Sort: ~33회 + 재귀 스택 오버헤드
+  Insertion Sort: 평균 25회, 캐시 친화적
+  → 작을 땐 Insertion이 실제로 더 빠름
+
+Introsort (C++ std::sort)도 같은 논리:
+  큰 partition은 Quick Sort
+  재귀 너무 깊으면 Heap Sort
+  작은 partition (16 미만)은 Insertion Sort`,
+    },
+    summary: "Tim Sort = 작은 구간 Insertion + 큰 구간 Merge. 실제 데이터의 부분 정렬 패턴을 활용하고, Merge의 안정성을 그대로 가져옴. 그래서 Python·Java가 채택.",
   },
   inplace: {
     title: "In-place 정렬",
@@ -178,12 +271,105 @@ const EN = {
   },
   stability: {
     title: "What is a Stable Sort?",
-    desc: "A sort is stable if equal elements keep their original relative order. Matters when sorting by a secondary key after a primary one.",
+    desc: "Elements with equal keys keep their original order. One line: when the comparator can't decide, break the tie by original position.",
     example: {
       before: ["(A,3)", "(B,1)", "(C,3)", "(D,2)"],
       stable: ["(B,1)", "(D,2)", "(A,3)", "(C,3)"],
       unstable: ["(B,1)", "(D,2)", "(C,3)", "(A,3)"],
     },
+    multiKey: {
+      title: "Why It Matters — Multi-Key Sorting",
+      desc: "Sort by join date first, then by age. If the second sort is stable, users of the same age stay in their join-date order. Unstable wipes out the first sort.",
+      code: `// Users
+[
+  {name: "Alice", age: 20, joined: "Day 1"},
+  {name: "Bob",   age: 20, joined: "Day 3"},
+]
+// 1) Sort by join date (done)
+// 2) Sort by age
+
+Stable:   [Alice(20,Day1), Bob(20,Day3)]   ← join order kept ✓
+Unstable: [Bob(20,Day3), Alice(20,Day1)]   ← first sort ruined ✗`,
+    },
+    primitiveVsObject: {
+      title: "Primitives don't need it, objects do",
+      primitive: "For int/double, the value is everything. In [3, 1, 3], the two 3s are indistinguishable → swapping them doesn't change the result → unstable is fine. That's why Java uses Dual-Pivot Quick Sort for primitives.",
+      object: "Objects carry fields beyond the sort key. Same key, different identity — order matters. That's why Java uses Tim Sort for object arrays.",
+    },
+    howStable: {
+      title: "How Stability Is Guaranteed",
+      desc: "In Merge Sort's merge step, prefer the left (earlier) element on equality. Using `<=` instead of `<` is what enforces it.",
+      code: `while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {   // ★ on tie, take from the left
+        result.add(left[i++]);   //   → original order preserved (stable)
+    } else {
+        result.add(right[j++]);
+    }
+}
+// If it were '<' instead? On tie, take from right → unstable.`,
+    },
+    whyQuickUnstable: "Quick Sort is unstable because partitioning swaps elements that are far apart, breaking the original order of equal keys.",
+  },
+  timsort: {
+    title: "Tim Sort — Deeper Look",
+    intro: "Designed by Tim Peters (Python) in 2002. A hybrid of Merge Sort + Insertion Sort. Default sort in Python and Java; JavaScript also guarantees stability since ES2019.",
+    keyIdea: "Key insight: 'real-world data is already partially sorted'. Logs, timestamps, user input — fully random is the exception, not the rule.",
+    steps: [
+      {
+        n: "1",
+        title: "Run Detection — Find Already-Sorted Ranges",
+        code: `[3, 5, 7, 2, 4, 6, 1, 8, 9, 10]
+ └─────┘  └─────┘  └──────────┘
+  run1     run2       run3
+Scan left to right, identify ascending runs.
+Descending runs are reversed into ascending.`,
+      },
+      {
+        n: "2",
+        title: "Extend Short Runs with Insertion Sort",
+        code: `minRun = 32~64 (chosen based on array size)
+Runs shorter than minRun are extended by Insertion Sort.
+
+Why Insertion Sort? — it's actually fastest for small n:
+  • O(n²) but at n=32, absolute work is tiny (~500 ops)
+  • Sequential array access → cache-friendly
+  • Zero recursion overhead
+  • Near O(n) on already-partly-sorted data`,
+      },
+      {
+        n: "3",
+        title: "Merge Sort the Runs",
+        code: `Merge the now-sorted runs.
+  run1 + run2 → merged
+  merged + run3 → final
+Merging pre-sorted runs is fast,
+and on equal keys we pick from the left → stable.`,
+      },
+    ],
+    performance: {
+      title: "Why It's Fast in Practice",
+      headers: ["Input pattern", "Tim Sort", "Note"],
+      rows: [
+        ["Fully random", "O(n log n)", "Same as Merge Sort"],
+        ["Already sorted", "O(n)", "One run, just compare"],
+        ["Partially sorted", "Much faster than O(n log n)", "The common real-world pattern"],
+        ["Reverse sorted", "O(n)", "Detect descending run, flip"],
+      ],
+    },
+    bigO: {
+      title: "Why Big-O Alone Isn't Enough",
+      desc: "For small n, constant factors dominate, and even within O(n log n), stability and cache behavior differ. Tim Sort answers the question 'why use Insertion Sort when it's O(n²)?'",
+      compareN10: `At n = 10, actual comparison counts:
+  Merge Sort: ~33 + recursion overhead
+  Insertion Sort: ~25 on average, cache-friendly
+  → Insertion is genuinely faster at small n
+
+Introsort (C++ std::sort) follows the same logic:
+  Big partitions → Quick Sort
+  Deep recursion → Heap Sort
+  Small partitions (< 16) → Insertion Sort`,
+    },
+    summary: "Tim Sort = Insertion for small chunks + Merge to combine them. Exploits real-data partial order and inherits Merge's stability. That's why Python and Java picked it.",
   },
   inplace: {
     title: "In-place Sorting",
@@ -528,13 +714,14 @@ heapify-down(root)
           </div>
         </Section>
 
-        {/* Stability + In-place */}
+        {/* 07 - Stability (deep) */}
         <Section
           number="07"
           title={t.stability.title}
           description={t.stability.desc}
         >
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5">
+            {/* basic example */}
             <div className="font-mono text-[11px] space-y-2">
               <div>
                 <span className="text-zinc-500">{lang === "ko" ? "정렬 전" : "Before"} (key=숫자): </span>
@@ -551,7 +738,45 @@ heapify-down(root)
                 <span className="text-zinc-600"> ← A, C{lang === "ko" ? "의 순서 뒤바뀜" : " order swapped"}</span>
               </div>
             </div>
-            <div className="border-t border-zinc-800 pt-4">
+
+            {/* multi-key example */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-violet-300 mb-2 font-semibold">
+                {t.stability.multiKey.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-3">{t.stability.multiKey.desc}</p>
+              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.stability.multiKey.code}</pre>
+            </div>
+
+            {/* primitive vs object */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-violet-300 mb-3 font-semibold">
+                {t.stability.primitiveVsObject.title}
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="text-[10px] font-mono text-amber-400 font-semibold mb-1">primitive (int, double)</div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{t.stability.primitiveVsObject.primitive}</p>
+                </div>
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  <div className="text-[10px] font-mono text-emerald-400 font-semibold mb-1">{lang === "ko" ? "객체 배열" : "Object array"}</div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{t.stability.primitiveVsObject.object}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* how stability is enforced */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-violet-300 mb-2 font-semibold">
+                {t.stability.howStable.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-3">{t.stability.howStable.desc}</p>
+              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.stability.howStable.code}</pre>
+              <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.stability.whyQuickUnstable}</p>
+            </div>
+
+            {/* in-place sub-section */}
+            <div className="border-t border-zinc-800 pt-5">
               <h4 className="text-xs font-mono text-zinc-400 mb-2">
                 {t.inplace.title}
               </h4>
@@ -566,9 +791,71 @@ heapify-down(root)
           </div>
         </Section>
 
-        {/* Real world */}
+        {/* 08 - Tim Sort deep dive */}
         <Section
           number="08"
+          title={t.timsort.title}
+          description={t.timsort.intro}
+        >
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5">
+            {/* key idea */}
+            <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
+              <p className="text-[11px] text-violet-300 leading-relaxed">💡 {t.timsort.keyIdea}</p>
+            </div>
+
+            {/* 3 steps */}
+            <div className="space-y-3">
+              {t.timsort.steps.map((s) => (
+                <div key={s.n} className="rounded-lg border border-zinc-700/40 bg-zinc-900/30 p-4">
+                  <div className="flex items-baseline gap-3 mb-2">
+                    <span className="text-violet-400/80 font-mono text-sm font-bold">{s.n}.</span>
+                    <h4 className="text-xs font-mono text-white font-semibold">{s.title}</h4>
+                  </div>
+                  <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-black/30 p-3 rounded whitespace-pre-wrap">{s.code}</pre>
+                </div>
+              ))}
+            </div>
+
+            {/* performance table */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-violet-300 mb-3 font-semibold">{t.timsort.performance.title}</h4>
+              <table className="w-full text-[11px] font-mono">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    {t.timsort.performance.headers.map((h, i) => (
+                      <th key={i} className={`text-left py-2 ${i === 0 ? "text-violet-400 w-32" : i === 1 ? "text-emerald-400 w-44" : "text-zinc-500"}`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.timsort.performance.rows.map((row, i) => (
+                    <tr key={i} className="border-b border-zinc-800/50">
+                      <td className="py-2 text-violet-300/80 font-semibold">{row[0]}</td>
+                      <td className="py-2 text-emerald-300/80">{row[1]}</td>
+                      <td className="py-2 text-zinc-500 text-[10px]">{row[2]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* big-O caveat */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-violet-300 mb-2 font-semibold">{t.timsort.bigO.title}</h4>
+              <p className="text-[11px] text-zinc-500 mb-3">{t.timsort.bigO.desc}</p>
+              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.timsort.bigO.compareN10}</pre>
+            </div>
+
+            {/* one-line summary */}
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+              <p className="text-[11px] text-emerald-300 leading-relaxed">📌 {t.timsort.summary}</p>
+            </div>
+          </div>
+        </Section>
+
+        {/* 09 - Real world */}
+        <Section
+          number="09"
           title={t.realworld.title}
           description=""
         >
