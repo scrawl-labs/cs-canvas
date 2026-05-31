@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
+import HeapVisualizer from "@/components/heap/HeapVisualizer";
 
 const KO = {
   breadcrumb: {
@@ -688,6 +690,11 @@ export default function HeapsPage() {
           </div>
         </div>
 
+        {/* Interactive visualizer */}
+        <div className="mb-16">
+          <HeapVisualizer />
+        </div>
+
         {/* 01 + 02 - property + array */}
         <Section
           number={t.sections[0].number}
@@ -835,7 +842,7 @@ export default function HeapsPage() {
         {/* 08 - Min-Heap Java implementation */}
         <Section number="08" title={t.heapImpl.title} description={t.heapImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.heapImpl.code}</pre>
+            <CodeBlock code={t.heapImpl.code} language="java" />
             <div className="mt-4 space-y-2">
               {t.heapImpl.keypoints.map((kp, i) => (
                 <div key={i} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
@@ -849,7 +856,7 @@ export default function HeapsPage() {
         {/* 09 - Build-Heap */}
         <Section number="09" title={t.buildHeapImpl.title} description={t.buildHeapImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.buildHeapImpl.code}</pre>
+            <CodeBlock code={t.buildHeapImpl.code} language="java" />
             <div className="mt-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
               <p className="text-[11px] text-cyan-300/80 leading-relaxed">🔍 {t.buildHeapImpl.whyOn}</p>
             </div>
@@ -859,7 +866,7 @@ export default function HeapsPage() {
         {/* 10 - Heap Sort */}
         <Section number="10" title={t.heapSortImpl.title} description={t.heapSortImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.heapSortImpl.code}</pre>
+            <CodeBlock code={t.heapSortImpl.code} language="java" />
             <p className="text-[10px] text-zinc-500 italic mt-3">📝 {t.heapSortImpl.note}</p>
           </div>
         </Section>
@@ -867,7 +874,7 @@ export default function HeapsPage() {
         {/* 11 - Top-K */}
         <Section number="11" title={t.topKImpl.title} description={t.topKImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.topKImpl.code}</pre>
+            <CodeBlock code={t.topKImpl.code} language="java" />
             <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
               <p className="text-[11px] text-emerald-300/80 leading-relaxed">💡 {t.topKImpl.insight}</p>
             </div>
@@ -877,7 +884,7 @@ export default function HeapsPage() {
         {/* 12 - Java PriorityQueue */}
         <Section number="12" title={t.pqImpl.title} description={t.pqImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.pqImpl.code}</pre>
+            <CodeBlock code={t.pqImpl.code} language="java" />
             <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.pqImpl.note}</p>
           </div>
         </Section>

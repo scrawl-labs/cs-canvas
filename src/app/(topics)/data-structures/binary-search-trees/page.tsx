@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
+import BSTVisualizer from "@/components/bst/BSTVisualizer";
 
 const KO = {
   breadcrumb: {
@@ -1180,6 +1182,11 @@ export default function BSTPage() {
           </div>
         </div>
 
+        {/* Interactive visualizer */}
+        <div className="mb-16">
+          <BSTVisualizer />
+        </div>
+
         {/* 01 - property */}
         <Section
           number={t.sections[0].number}
@@ -1386,7 +1393,7 @@ export default function BSTPage() {
         {/* 07 - BST Java implementation */}
         <Section number="07" title={t.bstImpl.title} description={t.bstImpl.intro}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.bstImpl.code}</pre>
+            <CodeBlock code={t.bstImpl.code} language="java" />
             <div className="mt-4 space-y-2">
               {t.bstImpl.keypoints.map((kp, i) => (
                 <div key={i} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
@@ -1445,13 +1452,13 @@ export default function BSTPage() {
             {/* Rotation Java code */}
             <div className="border-t border-zinc-800 pt-5">
               <h4 className="text-xs font-mono text-cyan-300 mb-3 font-semibold">{t.avl.rotationCode.title}</h4>
-              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.avl.rotationCode.code}</pre>
+              <CodeBlock code={t.avl.rotationCode.code} language="java" />
             </div>
 
             {/* Insert Java code */}
             <div className="border-t border-zinc-800 pt-5">
               <h4 className="text-xs font-mono text-cyan-300 mb-3 font-semibold">{t.avl.insertCode.title}</h4>
-              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.avl.insertCode.code}</pre>
+              <CodeBlock code={t.avl.insertCode.code} language="java" />
               <p className="text-[10px] text-zinc-500 italic mt-3">💡 {t.avl.insertCode.note}</p>
             </div>
 
@@ -1526,7 +1533,7 @@ export default function BSTPage() {
             {/* Insert Java code */}
             <div className="border-t border-zinc-800 pt-5">
               <h4 className="text-xs font-mono text-rose-300 mb-3 font-semibold">{t.rb.insertCode.title}</h4>
-              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.rb.insertCode.code}</pre>
+              <CodeBlock code={t.rb.insertCode.code} language="java" />
               <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.rb.insertCode.note}</p>
             </div>
 
