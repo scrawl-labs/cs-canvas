@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "data-structures", current: "linked lists" },
@@ -369,12 +370,12 @@ export default function LinkedListsPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-4">
             <div>
               <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.twoPointer.title}</h3>
-              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.twoPointer.code}</pre>
+              <CodeBlock language="java" code={t.twoPointer.code} />
               <p className="text-[10px] text-zinc-500 italic mt-2">{t.twoPointer.insight}</p>
             </div>
             <div className="border-t border-zinc-800 pt-4">
               <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.middleFinding.title}</h3>
-              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.middleFinding.code}</pre>
+              <CodeBlock language="java" code={t.middleFinding.code} />
               <p className="text-[10px] text-zinc-500 italic mt-2">{t.middleFinding.insight}</p>
             </div>
           </div>

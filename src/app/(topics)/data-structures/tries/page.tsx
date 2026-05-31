@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "data-structures", current: "tries" },
@@ -335,7 +336,7 @@ export default function TriesPage() {
 
         <Section number={t.sections[2].number} title={t.sections[2].title} description={t.sections[2].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.code.code}</pre>
+            <CodeBlock language="java" code={t.code.code} />
           </div>
         </Section>
 

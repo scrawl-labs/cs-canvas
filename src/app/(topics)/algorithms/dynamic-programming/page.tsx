@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: {
@@ -486,9 +487,9 @@ export default function DynamicProgrammingPage() {
                       {v.complexity}
                     </span>
                   </div>
-                  <pre className="text-[10px] text-zinc-400 font-mono mb-2 leading-relaxed overflow-x-auto">
-                    {v.code}
-                  </pre>
+                  <div className="mb-2">
+                    <CodeBlock code={v.code} language="java" showHeader={false} />
+                  </div>
                   <p className="text-[10px] text-zinc-500 leading-relaxed italic">
                     {v.note}
                   </p>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "algorithms", current: "divide & conquer" },
@@ -218,7 +219,7 @@ export default function DivideAndConquerPage() {
         <Section number={t.sections[0].number} title={t.sections[0].title} description={t.sections[0].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.steps.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.steps.code}</pre>
+            <CodeBlock language="java" code={t.steps.code} />
           </div>
         </Section>
 

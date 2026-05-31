@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "algorithms", current: "string algorithms" },
@@ -298,7 +299,7 @@ export default function StringAlgorithmsPage() {
         <Section number={t.sections[0].number} title={t.sections[0].title} description={t.sections[0].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.naive.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.naive.code}</pre>
+            <CodeBlock language="java" code={t.naive.code} />
             <p className="text-[10px] text-red-400/80 italic mt-3">⚠ {t.naive.cost}</p>
           </div>
         </Section>
@@ -333,7 +334,7 @@ export default function StringAlgorithmsPage() {
         <Section number={t.sections[2].number} title={t.sections[2].title} description={t.sections[2].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.rabinkarp.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.rabinkarp.code}</pre>
+            <CodeBlock language="java" code={t.rabinkarp.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.rabinkarp.cost}</p>
           </div>
         </Section>

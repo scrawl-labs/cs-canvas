@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "computer-architecture", current: "instruction set architecture" },
@@ -373,7 +374,7 @@ export default function ISAPage() {
               {t.example.items.map((e) => (
                 <div key={e.name} className="rounded-lg border border-slate-500/20 bg-slate-500/5 p-3">
                   <div className="text-xs font-mono text-slate-300 font-semibold mb-2">{e.name}</div>
-                  <pre className="text-[10px] font-mono text-zinc-400 bg-zinc-900/30 p-2 rounded">{e.code}</pre>
+                  <CodeBlock language="asm" code={e.code} showHeader={false} />
                 </div>
               ))}
             </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "computer-architecture", current: "cpu pipeline" },
@@ -366,7 +367,7 @@ export default function CpuPipelinePage() {
               {t.hazards.items.map((h) => (
                 <div key={h.name} className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                   <div className="text-xs font-mono text-amber-300 font-semibold mb-2">{h.name}</div>
-                  <pre className="text-[10px] font-mono text-zinc-400 bg-zinc-900/30 p-2 rounded whitespace-pre-wrap mb-2">{h.example}</pre>
+                  <div className="mb-2"><CodeBlock language="java" code={h.example} showHeader={false} /></div>
                   <div className="text-[10px] text-emerald-400/80">
                     <span className="font-semibold">{lang === "ko" ? "해결: " : "Fix: "}</span>
                     <span>{h.solution}</span>

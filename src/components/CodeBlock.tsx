@@ -9,6 +9,25 @@ const JAVA_KEYWORDS = new Set([
   "try", "catch", "finally", "throw", "throws", "instanceof",
 ]);
 
+// SQL keywords (treated case-insensitively at lookup)
+const SQL_KEYWORDS = new Set([
+  "select", "from", "where", "join", "left", "right", "inner", "outer", "full", "cross",
+  "on", "as", "and", "or", "not", "is", "null", "in", "between", "like",
+  "group", "by", "order", "limit", "offset", "having", "distinct", "asc", "desc",
+  "insert", "into", "values", "update", "set", "delete", "create", "table", "drop", "alter",
+  "primary", "key", "foreign", "references", "index", "view", "with", "case", "when", "then", "else", "end",
+  "union", "all", "exists", "explain", "analyze",
+]);
+
+const SQL_FUNCS = new Set(["count", "sum", "avg", "min", "max", "coalesce", "nullif", "cast"]);
+
+// Python keywords (for any leftover python-style snippets)
+const PY_KEYWORDS = new Set([
+  "def", "class", "from", "import", "as", "if", "elif", "else", "for", "while", "in", "not",
+  "and", "or", "return", "yield", "pass", "break", "continue", "True", "False", "None",
+  "try", "except", "finally", "raise", "with", "lambda", "global", "nonlocal", "is", "self",
+]);
+
 const JAVA_TYPES = new Set([
   // primitives wrappers
   "String", "Integer", "Long", "Double", "Float", "Character", "Boolean", "Object",
@@ -30,7 +49,11 @@ interface Token {
   className: string;
 }
 
-function tokenize(code: string): Token[] {
+function tokenize(code: string, language: string): Token[] {
+  const lang = language.toLowerCase();
+  const isSQL = lang === "sql";
+  const isPy = lang === "python" || lang === "py";
+
   const tokens: Token[] = [];
   const n = code.length;
   let i = 0;
@@ -96,18 +119,30 @@ function tokenize(code: string): Token[] {
       let j = i;
       while (j < n && /[a-zA-Z0-9_$]/.test(code[j])) j++;
       const word = code.slice(i, j);
+      const lower = word.toLowerCase();
 
       let className = "text-zinc-200";
-      if (JAVA_KEYWORDS.has(word)) {
-        className = "text-violet-400";
-      } else if (JAVA_TYPES.has(word) || /^[A-Z][A-Za-z0-9]*$/.test(word)) {
-        className = "text-cyan-300";
+      if (isSQL) {
+        if (SQL_KEYWORDS.has(lower)) className = "text-violet-400";
+        else if (SQL_FUNCS.has(lower)) className = "text-yellow-300";
+        else if (/^[A-Z][A-Za-z0-9_]*$/.test(word)) className = "text-cyan-300";
+      } else if (isPy) {
+        if (PY_KEYWORDS.has(word)) className = "text-violet-400";
+        else if (JAVA_TYPES.has(word) || /^[A-Z][A-Za-z0-9]*$/.test(word)) className = "text-cyan-300";
+        else {
+          let k = j;
+          while (k < n && /\s/.test(code[k])) k++;
+          if (k < n && code[k] === "(") className = "text-yellow-300";
+        }
       } else {
-        // function call check — followed by '('
-        let k = j;
-        while (k < n && /\s/.test(code[k])) k++;
-        if (k < n && code[k] === "(") {
-          className = "text-yellow-300";
+        if (JAVA_KEYWORDS.has(word)) {
+          className = "text-violet-400";
+        } else if (JAVA_TYPES.has(word) || /^[A-Z][A-Za-z0-9]*$/.test(word)) {
+          className = "text-cyan-300";
+        } else {
+          let k = j;
+          while (k < n && /\s/.test(code[k])) k++;
+          if (k < n && code[k] === "(") className = "text-yellow-300";
         }
       }
 
@@ -140,7 +175,7 @@ export default function CodeBlock({
   className = "",
   showHeader = true,
 }: CodeBlockProps) {
-  const tokens = tokenize(code);
+  const tokens = tokenize(code, language);
 
   return (
     <div

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "algorithms", current: "backtracking" },
@@ -340,7 +341,7 @@ export default function BacktrackingPage() {
         <Section number={t.sections[0].number} title={t.sections[0].title} description={t.sections[0].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.pattern.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.pattern.code}</pre>
+            <CodeBlock language="java" code={t.pattern.code} />
           </div>
         </Section>
 
@@ -371,7 +372,7 @@ export default function BacktrackingPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-2">{t.pruning.title}</h3>
             <p className="text-[11px] text-zinc-500 mb-3">{t.pruning.desc}</p>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.pruning.code}</pre>
+            <CodeBlock language="java" code={t.pruning.code} />
           </div>
         </Section>
 

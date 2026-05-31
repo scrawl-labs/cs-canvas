@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: {
@@ -745,7 +746,7 @@ heapify-down(root)
                 {t.stability.multiKey.title}
               </h4>
               <p className="text-[11px] text-zinc-500 mb-3">{t.stability.multiKey.desc}</p>
-              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.stability.multiKey.code}</pre>
+              <CodeBlock language="java" code={t.stability.multiKey.code} />
             </div>
 
             {/* primitive vs object */}
@@ -771,7 +772,7 @@ heapify-down(root)
                 {t.stability.howStable.title}
               </h4>
               <p className="text-[11px] text-zinc-500 mb-3">{t.stability.howStable.desc}</p>
-              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.stability.howStable.code}</pre>
+              <CodeBlock language="java" code={t.stability.howStable.code} />
               <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.stability.whyQuickUnstable}</p>
             </div>
 
@@ -811,7 +812,7 @@ heapify-down(root)
                     <span className="text-violet-400/80 font-mono text-sm font-bold">{s.n}.</span>
                     <h4 className="text-xs font-mono text-white font-semibold">{s.title}</h4>
                   </div>
-                  <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-black/30 p-3 rounded whitespace-pre-wrap">{s.code}</pre>
+                  <CodeBlock language="java" code={s.code} showHeader={false} />
                 </div>
               ))}
             </div>
@@ -843,7 +844,7 @@ heapify-down(root)
             <div className="border-t border-zinc-800 pt-5">
               <h4 className="text-xs font-mono text-violet-300 mb-2 font-semibold">{t.timsort.bigO.title}</h4>
               <p className="text-[11px] text-zinc-500 mb-3">{t.timsort.bigO.desc}</p>
-              <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.timsort.bigO.compareN10}</pre>
+              <CodeBlock language="java" code={t.timsort.bigO.compareN10} showHeader={false} />
             </div>
 
             {/* one-line summary */}

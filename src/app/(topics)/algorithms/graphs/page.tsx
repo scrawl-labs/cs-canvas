@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: {
@@ -419,8 +420,8 @@ F: [C]`}</pre>
                 ))}
               </tbody>
             </table>
-            <div className="mt-4 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
-              <pre className="text-[10px] font-mono text-zinc-400">{`void bfs(Node start) {
+            <div className="mt-4">
+              <CodeBlock language="java" code={`void bfs(Node start) {
     Queue<Node> queue = new ArrayDeque<>();
     Set<Node> visited = new HashSet<>();
     queue.offer(start);
@@ -434,7 +435,7 @@ F: [C]`}</pre>
             }
         }
     }
-}`}</pre>
+}`} />
             </div>
           </div>
         </Section>
@@ -467,8 +468,8 @@ F: [C]`}</pre>
                 ))}
               </tbody>
             </table>
-            <div className="mt-4 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
-              <pre className="text-[10px] font-mono text-zinc-400">{`void dfs(Node node, Set<Node> visited) {
+            <div className="mt-4">
+              <CodeBlock language="java" code={`void dfs(Node node, Set<Node> visited) {
     visited.add(node);
     for (Node neighbor : node.neighbors) {
         if (!visited.contains(neighbor)) {
@@ -476,7 +477,7 @@ F: [C]`}</pre>
         }
     }
     // finish time: post-order moment
-}`}</pre>
+}`} />
             </div>
           </div>
         </Section>

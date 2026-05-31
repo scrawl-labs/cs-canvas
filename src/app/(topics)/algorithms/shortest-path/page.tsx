@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "algorithms", current: "shortest path" },
@@ -388,7 +389,7 @@ export default function ShortestPathPage() {
         <Section number={t.sections[1].number} title={t.sections[1].title} description={t.sections[1].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.bfsCode.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.bfsCode.code}</pre>
+            <CodeBlock language="java" code={t.bfsCode.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.bfsCode.note}</p>
           </div>
         </Section>
@@ -396,7 +397,7 @@ export default function ShortestPathPage() {
         <Section number={t.sections[2].number} title={t.sections[2].title} description={t.sections[2].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.dijkstraCode.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.dijkstraCode.code}</pre>
+            <CodeBlock language="java" code={t.dijkstraCode.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.dijkstraCode.note}</p>
           </div>
         </Section>
@@ -404,7 +405,7 @@ export default function ShortestPathPage() {
         <Section number={t.sections[3].number} title={t.sections[3].title} description={t.sections[3].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.bellmanFord.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.bellmanFord.code}</pre>
+            <CodeBlock language="java" code={t.bellmanFord.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.bellmanFord.note}</p>
           </div>
         </Section>
@@ -412,7 +413,7 @@ export default function ShortestPathPage() {
         <Section number={t.sections[4].number} title={t.sections[4].title} description={t.sections[4].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.floyd.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.floyd.code}</pre>
+            <CodeBlock language="java" code={t.floyd.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.floyd.note}</p>
           </div>
         </Section>

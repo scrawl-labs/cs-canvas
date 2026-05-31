@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "databases", current: "joins" },
@@ -408,7 +409,7 @@ export default function JoinsPage() {
         <Section number={t.sections[1].number} title={t.sections[1].title} description={t.sections[1].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.nestedLoop.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.nestedLoop.code}</pre>
+            <CodeBlock language="java" code={t.nestedLoop.code} />
             <div className="mt-3 space-y-1">
               <div className="text-[11px] font-mono"><span className="text-rose-400">{lang === "ko" ? "비용: " : "Cost: "}</span><span className="text-zinc-400">{t.nestedLoop.cost}</span></div>
               <div className="text-[11px] font-mono"><span className="text-rose-400">{lang === "ko" ? "언제: " : "When: "}</span><span className="text-zinc-400">{t.nestedLoop.when}</span></div>
@@ -439,7 +440,7 @@ export default function JoinsPage() {
         <Section number={t.sections[3].number} title={t.sections[3].title} description={t.sections[3].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.sortMerge.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.sortMerge.code}</pre>
+            <CodeBlock language="java" code={t.sortMerge.code} />
             <div className="mt-3 space-y-1">
               <div className="text-[11px] font-mono"><span className="text-rose-400">{lang === "ko" ? "비용: " : "Cost: "}</span><span className="text-zinc-400">{t.sortMerge.cost}</span></div>
               <div className="text-[11px] font-mono"><span className="text-rose-400">{lang === "ko" ? "언제: " : "When: "}</span><span className="text-zinc-400">{t.sortMerge.when}</span></div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "computer-architecture", current: "cache hierarchy" },
@@ -357,12 +358,12 @@ export default function CacheHierarchyPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-[11px] font-mono text-emerald-400 mb-2">✓ {t.locality.good.label}</div>
-                <pre className="text-[10px] font-mono text-zinc-400 bg-zinc-900/30 p-3 rounded">{t.locality.good.code}</pre>
+                <CodeBlock language="java" code={t.locality.good.code} showHeader={false} />
                 <p className="text-[10px] text-zinc-500 italic mt-2">{t.locality.good.note}</p>
               </div>
               <div>
                 <div className="text-[11px] font-mono text-red-400 mb-2">✗ {t.locality.bad.label}</div>
-                <pre className="text-[10px] font-mono text-zinc-400 bg-zinc-900/30 p-3 rounded">{t.locality.bad.code}</pre>
+                <CodeBlock language="java" code={t.locality.bad.code} showHeader={false} />
                 <p className="text-[10px] text-red-400/80 italic mt-2">{t.locality.bad.note}</p>
               </div>
             </div>
@@ -396,7 +397,7 @@ export default function CacheHierarchyPage() {
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-2">{t.cacheLine.title}</h3>
             <p className="text-[11px] text-zinc-500 mb-3">{t.cacheLine.desc}</p>
-            <pre className="text-[11px] font-mono text-zinc-400 bg-zinc-900/30 p-3 rounded">{t.cacheLine.example}</pre>
+            <CodeBlock language="java" code={t.cacheLine.example} />
           </div>
         </Section>
 

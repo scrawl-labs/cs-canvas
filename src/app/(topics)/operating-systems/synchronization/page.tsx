@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "operating-systems", current: "synchronization" },
@@ -441,7 +442,7 @@ export default function SynchronizationPage() {
         <Section number={t.sections[2].number} title={t.sections[2].title} description={t.sections[2].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.mutex.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.mutex.code}</pre>
+            <CodeBlock language="java" code={t.mutex.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.mutex.note}</p>
           </div>
         </Section>
@@ -457,7 +458,7 @@ export default function SynchronizationPage() {
                 </div>
               ))}
             </div>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.semaphore.code}</pre>
+            <CodeBlock language="java" code={t.semaphore.code} />
           </div>
         </Section>
 
@@ -465,14 +466,14 @@ export default function SynchronizationPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-2">{t.monitor.title}</h3>
             <p className="text-[11px] text-zinc-500 mb-3">{t.monitor.desc}</p>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.monitor.code}</pre>
+            <CodeBlock language="java" code={t.monitor.code} />
           </div>
         </Section>
 
         <Section number={t.sections[5].number} title={t.sections[5].title} description={t.sections[5].desc}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <h3 className="text-xs font-mono text-zinc-400 mb-3">{t.producer.title}</h3>
-            <pre className="text-[11px] font-mono text-zinc-400 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.producer.code}</pre>
+            <CodeBlock language="java" code={t.producer.code} />
             <p className="text-[10px] text-zinc-500 italic mt-3">{t.producer.note}</p>
           </div>
         </Section>

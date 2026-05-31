@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReactNode } from "react";
+import CodeBlock from "@/components/CodeBlock";
 
 const KO = {
   breadcrumb: { home: "cs-canvas", parent: "computer-architecture", current: "branch prediction" },
@@ -392,7 +393,7 @@ export default function BranchPredictionPage() {
 
         <Section number="04" title={t.loopExample.title} description="">
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-            <pre className="text-[11px] font-mono text-zinc-400 bg-zinc-900/30 p-3 rounded mb-3">{t.loopExample.code}</pre>
+            <div className="mb-3"><CodeBlock language="java" code={t.loopExample.code} /></div>
             <table className="w-full text-[11px] font-mono">
               <thead>
                 <tr className="border-b border-zinc-800">
