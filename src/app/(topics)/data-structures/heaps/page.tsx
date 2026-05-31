@@ -117,6 +117,191 @@ const KO = {
       ["용도", "우선순위만 필요할 때", "정렬·범위 검색 필요할 때"],
     ],
   },
+  heapImpl: {
+    title: "Min-Heap 전체 구현 — Java",
+    intro: "ArrayList로 백킹 스토어를 두고, 인덱스 산술로 부모/자식을 계산. siftUp / siftDown이 핵심 빌딩 블록.",
+    code: `import java.util.ArrayList;
+import java.util.List;
+
+class MinHeap {
+    private final List<Integer> data = new ArrayList<>();
+
+    // 인덱스 산술 — 핵심 공식
+    private int parent(int i) { return (i - 1) / 2; }
+    private int left(int i)   { return 2 * i + 1; }
+    private int right(int i)  { return 2 * i + 2; }
+
+    public int size()       { return data.size(); }
+    public boolean isEmpty(){ return data.isEmpty(); }
+
+    // Peek — O(1)
+    public int peek() {
+        if (data.isEmpty()) throw new IllegalStateException("empty heap");
+        return data.get(0);
+    }
+
+    // Insert — O(log n)
+    public void insert(int key) {
+        data.add(key);              // 1) 배열 끝에 추가
+        siftUp(data.size() - 1);    // 2) 위로 올리며 힙 속성 복원
+    }
+
+    // Extract-Min — O(log n)
+    public int extractMin() {
+        if (data.isEmpty()) throw new IllegalStateException("empty heap");
+        int min = data.get(0);
+        int last = data.remove(data.size() - 1);
+        if (!data.isEmpty()) {
+            data.set(0, last);      // 마지막을 루트로
+            siftDown(0);            // 아래로 내리며 복원
+        }
+        return min;
+    }
+
+    // siftUp: 자식이 부모보다 작으면 swap, 위로 반복
+    private void siftUp(int i) {
+        while (i > 0) {
+            int p = parent(i);
+            if (data.get(i) >= data.get(p)) break;   // 힙 속성 OK
+            swap(i, p);
+            i = p;
+        }
+    }
+
+    // siftDown: 부모가 더 작은 자식보다 크면 swap, 아래로 반복
+    private void siftDown(int i) {
+        int n = data.size();
+        while (true) {
+            int l = left(i), r = right(i), smallest = i;
+            if (l < n && data.get(l) < data.get(smallest)) smallest = l;
+            if (r < n && data.get(r) < data.get(smallest)) smallest = r;
+            if (smallest == i) break;                 // 더 내려갈 곳 없음
+            swap(i, smallest);
+            i = smallest;
+        }
+    }
+
+    private void swap(int i, int j) {
+        int tmp = data.get(i);
+        data.set(i, data.get(j));
+        data.set(j, tmp);
+    }
+}`,
+    keypoints: [
+      "siftUp은 '부모보다 작으면 swap'을 위로 반복. siftDown은 더 작은 자식과 swap을 아래로 반복.",
+      "siftDown에서 양쪽 자식 중 더 작은 쪽과 swap해야 함 — 한쪽만 보면 힙 속성 깨질 수 있음.",
+      "삽입은 끝에 push → siftUp. 추출은 루트 저장 → 마지막을 루트로 → siftDown.",
+      "Max-Heap이 필요하면 비교 부호만 뒤집기 (`>` ↔ `<`). 또는 값에 -1을 곱해서 Min-Heap 그대로 쓰기.",
+    ],
+  },
+  buildHeapImpl: {
+    title: "Build-Heap — O(n)으로 한 번에 만들기",
+    intro: "n개의 원소를 하나씩 insert하면 O(n log n). 그러나 배열 그대로 두고 마지막 비-leaf 노드부터 siftDown을 반복하면 O(n).",
+    code: `// 이미 채워진 배열로부터 힙 빌드 — O(n)
+public static void buildHeap(int[] arr) {
+    int n = arr.length;
+    // 마지막 부모 노드 인덱스 = n/2 - 1
+    // 그 위로 거꾸로 가며 siftDown
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        siftDownArr(arr, i, n);
+    }
+}
+
+private static void siftDownArr(int[] arr, int i, int n) {
+    while (true) {
+        int l = 2 * i + 1, r = 2 * i + 2, smallest = i;
+        if (l < n && arr[l] < arr[smallest]) smallest = l;
+        if (r < n && arr[r] < arr[smallest]) smallest = r;
+        if (smallest == i) return;
+        int tmp = arr[i]; arr[i] = arr[smallest]; arr[smallest] = tmp;
+        i = smallest;
+    }
+}`,
+    whyOn: "왜 O(n)인가? 깊이 h의 노드는 최대 h번 siftDown, 그런 노드의 개수는 약 n/2^(h+1)개. 총 비용 = Σ h × (n / 2^(h+1)) — 등비×선형 급수가 수렴해 O(n).",
+  },
+  heapSortImpl: {
+    title: "Heap Sort 구현 — In-place, O(n log n) 보장",
+    intro: "1) 배열을 Max-Heap으로 빌드 (O(n)). 2) 루트(최댓값)를 마지막과 swap, 힙 크기 줄이고 siftDown 반복 (n × O(log n)).",
+    code: `public static void heapSort(int[] arr) {
+    int n = arr.length;
+
+    // 1) Max-Heap 빌드 — O(n)
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        siftDownMax(arr, i, n);
+    }
+
+    // 2) 루트와 마지막 swap → 힙 크기 1 줄임 → siftDown 반복
+    for (int end = n - 1; end > 0; end--) {
+        int tmp = arr[0]; arr[0] = arr[end]; arr[end] = tmp;
+        siftDownMax(arr, 0, end);   // 'end'가 새 힙 크기
+    }
+}
+
+// Max-Heap용 siftDown — 부등호 반대
+private static void siftDownMax(int[] arr, int i, int n) {
+    while (true) {
+        int l = 2 * i + 1, r = 2 * i + 2, largest = i;
+        if (l < n && arr[l] > arr[largest]) largest = l;
+        if (r < n && arr[r] > arr[largest]) largest = r;
+        if (largest == i) return;
+        int tmp = arr[i]; arr[i] = arr[largest]; arr[largest] = tmp;
+        i = largest;
+    }
+}`,
+    note: "Max-Heap을 쓰는 이유: 매번 루트(최댓값)를 뒤쪽으로 보내면 자연스럽게 오름차순 정렬. 추가 공간 없음 (In-place). 안정 정렬 아님 (멀리 떨어진 원소 swap).",
+  },
+  topKImpl: {
+    title: "Top-K 문제 — Min-Heap 크기 K 유지",
+    intro: "n개 중 가장 큰 K개를 찾는 문제. 전체 정렬은 O(n log n)이지만, Min-Heap 크기 K만 유지하면 O(n log k) — K가 작을 때 훨씬 빠름.",
+    code: `import java.util.PriorityQueue;
+
+public static int[] topK(int[] arr, int k) {
+    // Java 기본 PriorityQueue는 Min-Heap
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+    for (int x : arr) {
+        if (minHeap.size() < k) {
+            minHeap.offer(x);
+        } else if (x > minHeap.peek()) {
+            // 힙의 최솟값보다 크면 교체
+            minHeap.poll();
+            minHeap.offer(x);
+        }
+    }
+    // 힙에 남은 K개가 답
+    int[] result = new int[k];
+    for (int i = 0; i < k; i++) result[i] = minHeap.poll();
+    return result;
+}`,
+    insight: "왜 Min-Heap인가? 가장 큰 K개를 추적하려면 '지금까지의 K개 중 가장 작은 것'을 빨리 알아야 함. 그게 Min-Heap의 루트. 새 원소가 그보다 크면 자리 바꿈.",
+  },
+  pqImpl: {
+    title: "Java PriorityQueue — 실전에서는 직접 구현 X",
+    intro: "교육용으로는 직접 짜보지만, 실무에선 표준 라이브러리 사용. Java의 PriorityQueue는 Min-Heap 기반.",
+    code: `import java.util.PriorityQueue;
+import java.util.Comparator;
+
+// 기본: Min-Heap
+PriorityQueue<Integer> minPQ = new PriorityQueue<>();
+minPQ.offer(5);    // O(log n) 삽입
+minPQ.offer(1);
+minPQ.offer(3);
+minPQ.peek();      // 1 (최솟값)
+minPQ.poll();      // 1 반환 & 제거
+
+// Max-Heap: Comparator 역순
+PriorityQueue<Integer> maxPQ = new PriorityQueue<>(Comparator.reverseOrder());
+
+// 객체 정렬: 우선순위 기준 지정
+PriorityQueue<Task> taskQueue = new PriorityQueue<>(
+    Comparator.comparingInt(t -> t.priority)
+);
+
+// Dijkstra에서 자주 쓰는 패턴: (거리, 노드) 쌍을 거리로 정렬
+PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+pq.offer(new int[]{0, src});`,
+    note: "내부적으로 배열 기반 binary heap. add/offer = O(log n), poll = O(log n), peek = O(1). 단, contains/remove(Object)는 O(n) — 임의 원소 찾으려면 linear scan.",
+  },
   summary: {
     title: "핵심 개념 정리",
     items: [
@@ -124,10 +309,12 @@ const KO = {
       { label: "배열 표현", text: "완전 이진 트리이므로 배열로 저장. parent(i)=(i-1)/2, child(i)=2i+1, 2i+2." },
       { label: "Insert (sift-up)", text: "끝에 추가 후 부모와 비교하며 위로. O(log n)." },
       { label: "Extract (sift-down)", text: "루트 반환, 끝을 루트로, 자식과 비교하며 아래로. O(log n)." },
-      { label: "Build-Heap", text: "n개 한꺼번에 → O(n). 핵심 트릭: 마지막 비-leaf부터 sift-down." },
+      { label: "Build-Heap", text: "n개 한꺼번에 → O(n). 핵심 트릭: 마지막 비-leaf부터 siftDown 거꾸로." },
       { label: "Heap Sort", text: "Build + n × Extract. O(n log n) 보장, O(1) 추가 공간, 불안정." },
-      { label: "우선순위 큐", text: "힙의 가장 흔한 응용. Dijkstra, A*, 작업 스케줄링, 이벤트 시뮬레이션." },
-      { label: "Top-K", text: "Min-Heap에 K개만 유지. heap[0]보다 큰 새 원소만 push & pop. O(n log k)." },
+      { label: "siftDown 주의", text: "양쪽 자식 중 더 작은(또는 큰) 쪽과 swap. 한쪽만 보면 힙 속성 깨질 수 있음." },
+      { label: "우선순위 큐", text: "힙의 가장 흔한 응용. Dijkstra, A*, 작업 스케줄링. Java는 PriorityQueue 클래스." },
+      { label: "Top-K", text: "Min-Heap 크기 K. heap[0]보다 큰 새 원소만 push & pop. O(n log k)." },
+      { label: "Java 팁", text: "Max-Heap은 Comparator.reverseOrder(). 객체는 Comparator.comparing... 으로 우선순위 키 지정." },
     ],
   },
 };
@@ -245,6 +432,191 @@ const EN = {
       ["When to use", "Need only priority", "Need range/order queries"],
     ],
   },
+  heapImpl: {
+    title: "Min-Heap Full Implementation — Java",
+    intro: "Use an ArrayList as backing store; compute parent/children with index math. siftUp and siftDown are the core building blocks.",
+    code: `import java.util.ArrayList;
+import java.util.List;
+
+class MinHeap {
+    private final List<Integer> data = new ArrayList<>();
+
+    // Index arithmetic — the core formulas
+    private int parent(int i) { return (i - 1) / 2; }
+    private int left(int i)   { return 2 * i + 1; }
+    private int right(int i)  { return 2 * i + 2; }
+
+    public int size()       { return data.size(); }
+    public boolean isEmpty(){ return data.isEmpty(); }
+
+    // Peek — O(1)
+    public int peek() {
+        if (data.isEmpty()) throw new IllegalStateException("empty heap");
+        return data.get(0);
+    }
+
+    // Insert — O(log n)
+    public void insert(int key) {
+        data.add(key);              // 1) append to end
+        siftUp(data.size() - 1);    // 2) bubble up to restore heap property
+    }
+
+    // Extract-Min — O(log n)
+    public int extractMin() {
+        if (data.isEmpty()) throw new IllegalStateException("empty heap");
+        int min = data.get(0);
+        int last = data.remove(data.size() - 1);
+        if (!data.isEmpty()) {
+            data.set(0, last);      // move last to root
+            siftDown(0);            // restore by going down
+        }
+        return min;
+    }
+
+    // siftUp: swap with parent while smaller than it
+    private void siftUp(int i) {
+        while (i > 0) {
+            int p = parent(i);
+            if (data.get(i) >= data.get(p)) break;   // heap property OK
+            swap(i, p);
+            i = p;
+        }
+    }
+
+    // siftDown: swap with the smaller child while bigger than it
+    private void siftDown(int i) {
+        int n = data.size();
+        while (true) {
+            int l = left(i), r = right(i), smallest = i;
+            if (l < n && data.get(l) < data.get(smallest)) smallest = l;
+            if (r < n && data.get(r) < data.get(smallest)) smallest = r;
+            if (smallest == i) break;                 // can't go further
+            swap(i, smallest);
+            i = smallest;
+        }
+    }
+
+    private void swap(int i, int j) {
+        int tmp = data.get(i);
+        data.set(i, data.get(j));
+        data.set(j, tmp);
+    }
+}`,
+    keypoints: [
+      "siftUp = while (smaller than parent) swap up. siftDown = while (bigger than smaller child) swap down.",
+      "siftDown must compare with the smaller (or larger) of the two children — looking at only one can break the heap property.",
+      "Insert: push to end → siftUp. Extract: save root → move last to root → siftDown.",
+      "For a Max-Heap, flip the comparison (`>` ↔ `<`). Or negate values and use Min-Heap as-is.",
+    ],
+  },
+  buildHeapImpl: {
+    title: "Build-Heap — Bulk Construction in O(n)",
+    intro: "Inserting n elements one by one is O(n log n). But if you take the array as-is and siftDown from the last non-leaf backward, you get O(n).",
+    code: `// Build a heap from an existing array — O(n)
+public static void buildHeap(int[] arr) {
+    int n = arr.length;
+    // Last parent index = n/2 - 1
+    // Walk backward and siftDown each
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        siftDownArr(arr, i, n);
+    }
+}
+
+private static void siftDownArr(int[] arr, int i, int n) {
+    while (true) {
+        int l = 2 * i + 1, r = 2 * i + 2, smallest = i;
+        if (l < n && arr[l] < arr[smallest]) smallest = l;
+        if (r < n && arr[r] < arr[smallest]) smallest = r;
+        if (smallest == i) return;
+        int tmp = arr[i]; arr[i] = arr[smallest]; arr[smallest] = tmp;
+        i = smallest;
+    }
+}`,
+    whyOn: "Why O(n)? A node at depth h does at most h siftDown steps, and there are about n/2^(h+1) such nodes. Total = Σ h × (n / 2^(h+1)) — a converging series → O(n).",
+  },
+  heapSortImpl: {
+    title: "Heap Sort — In-place, Guaranteed O(n log n)",
+    intro: "1) Build a Max-Heap (O(n)). 2) Swap root (max) with the last, shrink heap, siftDown — repeat (n × O(log n)).",
+    code: `public static void heapSort(int[] arr) {
+    int n = arr.length;
+
+    // 1) Build Max-Heap — O(n)
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        siftDownMax(arr, i, n);
+    }
+
+    // 2) Swap root with last → shrink heap → siftDown, repeat
+    for (int end = n - 1; end > 0; end--) {
+        int tmp = arr[0]; arr[0] = arr[end]; arr[end] = tmp;
+        siftDownMax(arr, 0, end);   // 'end' is the new heap size
+    }
+}
+
+// Max-Heap siftDown — flipped comparisons
+private static void siftDownMax(int[] arr, int i, int n) {
+    while (true) {
+        int l = 2 * i + 1, r = 2 * i + 2, largest = i;
+        if (l < n && arr[l] > arr[largest]) largest = l;
+        if (r < n && arr[r] > arr[largest]) largest = r;
+        if (largest == i) return;
+        int tmp = arr[i]; arr[i] = arr[largest]; arr[largest] = tmp;
+        i = largest;
+    }
+}`,
+    note: "Why Max-Heap? Pushing the max to the back each iteration produces ascending order naturally. No extra space (in-place). Not stable (swaps reach far).",
+  },
+  topKImpl: {
+    title: "Top-K Problem — Maintain a Min-Heap of size K",
+    intro: "Find the K largest of n values. Full sort is O(n log n); keeping a Min-Heap of size K gives O(n log k) — much faster when K is small.",
+    code: `import java.util.PriorityQueue;
+
+public static int[] topK(int[] arr, int k) {
+    // Java's default PriorityQueue is a Min-Heap
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+    for (int x : arr) {
+        if (minHeap.size() < k) {
+            minHeap.offer(x);
+        } else if (x > minHeap.peek()) {
+            // bigger than the heap min → replace
+            minHeap.poll();
+            minHeap.offer(x);
+        }
+    }
+    // The remaining K elements are the answer
+    int[] result = new int[k];
+    for (int i = 0; i < k; i++) result[i] = minHeap.poll();
+    return result;
+}`,
+    insight: "Why Min-Heap? To track the K largest you need fast access to 'the smallest of the current K'. That's a Min-Heap's root. New element bigger than that → swap in.",
+  },
+  pqImpl: {
+    title: "Java PriorityQueue — In Practice, Use the Library",
+    intro: "Roll your own for learning, use the stdlib in production. Java's PriorityQueue is a Min-Heap.",
+    code: `import java.util.PriorityQueue;
+import java.util.Comparator;
+
+// Default: Min-Heap
+PriorityQueue<Integer> minPQ = new PriorityQueue<>();
+minPQ.offer(5);    // O(log n) insertion
+minPQ.offer(1);
+minPQ.offer(3);
+minPQ.peek();      // 1 (min)
+minPQ.poll();      // returns 1 and removes
+
+// Max-Heap: reverse comparator
+PriorityQueue<Integer> maxPQ = new PriorityQueue<>(Comparator.reverseOrder());
+
+// Object sorting: specify the priority key
+PriorityQueue<Task> taskQueue = new PriorityQueue<>(
+    Comparator.comparingInt(t -> t.priority)
+);
+
+// Dijkstra-style: (distance, node) pairs ordered by distance
+PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+pq.offer(new int[]{0, src});`,
+    note: "Internally an array-backed binary heap. add/offer/poll are O(log n); peek is O(1). But contains/remove(Object) is O(n) — no efficient arbitrary lookup.",
+  },
   summary: {
     title: "Key Concepts",
     items: [
@@ -252,10 +624,12 @@ const EN = {
       { label: "Array form", text: "Complete tree → packed array. parent(i)=(i-1)/2, child(i)=2i+1, 2i+2." },
       { label: "Insert (sift-up)", text: "Append, then bubble up by comparing to parent. O(log n)." },
       { label: "Extract (sift-down)", text: "Save root, move last to root, swap with larger/smaller child. O(log n)." },
-      { label: "Build-Heap", text: "Bulk build is O(n). Trick: sift-down starting from the last non-leaf." },
+      { label: "Build-Heap", text: "Bulk build is O(n). Trick: sift-down starting from the last non-leaf backward." },
       { label: "Heap Sort", text: "Build + n × Extract. Guaranteed O(n log n), O(1) extra space, unstable." },
-      { label: "Priority Queue", text: "Heap's most common use. Dijkstra, A*, scheduling, event sim." },
+      { label: "siftDown gotcha", text: "Compare with the smaller (or larger) of the two children — looking at only one can break the property." },
+      { label: "Priority Queue", text: "Heap's most common use. Dijkstra, A*, scheduling. Java has PriorityQueue." },
       { label: "Top-K", text: "Min-Heap of size K. Push only when bigger than heap[0]. O(n log k)." },
+      { label: "Java tips", text: "Max-Heap via Comparator.reverseOrder(). Objects via Comparator.comparing... to specify the priority key." },
     ],
   },
 };
@@ -455,6 +829,56 @@ export default function HeapsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Section>
+
+        {/* 08 - Min-Heap Java implementation */}
+        <Section number="08" title={t.heapImpl.title} description={t.heapImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.heapImpl.code}</pre>
+            <div className="mt-4 space-y-2">
+              {t.heapImpl.keypoints.map((kp, i) => (
+                <div key={i} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">💡 {kp}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        {/* 09 - Build-Heap */}
+        <Section number="09" title={t.buildHeapImpl.title} description={t.buildHeapImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.buildHeapImpl.code}</pre>
+            <div className="mt-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <p className="text-[11px] text-cyan-300/80 leading-relaxed">🔍 {t.buildHeapImpl.whyOn}</p>
+            </div>
+          </div>
+        </Section>
+
+        {/* 10 - Heap Sort */}
+        <Section number="10" title={t.heapSortImpl.title} description={t.heapSortImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.heapSortImpl.code}</pre>
+            <p className="text-[10px] text-zinc-500 italic mt-3">📝 {t.heapSortImpl.note}</p>
+          </div>
+        </Section>
+
+        {/* 11 - Top-K */}
+        <Section number="11" title={t.topKImpl.title} description={t.topKImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.topKImpl.code}</pre>
+            <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+              <p className="text-[11px] text-emerald-300/80 leading-relaxed">💡 {t.topKImpl.insight}</p>
+            </div>
+          </div>
+        </Section>
+
+        {/* 12 - Java PriorityQueue */}
+        <Section number="12" title={t.pqImpl.title} description={t.pqImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.pqImpl.code}</pre>
+            <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.pqImpl.note}</p>
           </div>
         </Section>
 
