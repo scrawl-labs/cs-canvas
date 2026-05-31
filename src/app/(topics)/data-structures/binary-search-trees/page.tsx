@@ -134,6 +134,413 @@ const KO = {
       ["사용처", "검색 위주 (DB 인덱스)", "범용 (C++ map, Java TreeMap)"],
     ],
   },
+  bstImpl: {
+    title: "BST 전체 구현 — Java",
+    intro: "재귀로 구현하면 깔끔. 각 메서드가 'subtree의 root를 받아서 변경된 subtree의 root를 반환'하는 패턴.",
+    code: `class Node {
+    int key;
+    Node left, right;
+    Node(int key) { this.key = key; }
+}
+
+class BST {
+    Node root;
+
+    // 검색 — O(h)
+    public boolean search(int key) {
+        return searchRec(root, key);
+    }
+    private boolean searchRec(Node node, int key) {
+        if (node == null) return false;
+        if (key == node.key) return true;
+        return key < node.key
+            ? searchRec(node.left, key)
+            : searchRec(node.right, key);
+    }
+
+    // 삽입 — O(h)
+    public void insert(int key) {
+        root = insertRec(root, key);
+    }
+    private Node insertRec(Node node, int key) {
+        if (node == null) return new Node(key);
+        if (key < node.key)      node.left  = insertRec(node.left, key);
+        else if (key > node.key) node.right = insertRec(node.right, key);
+        // 같은 키는 무시 (또는 중복 허용 정책에 따라 처리)
+        return node;
+    }
+
+    // 삭제 — O(h), 3가지 케이스
+    public void delete(int key) {
+        root = deleteRec(root, key);
+    }
+    private Node deleteRec(Node node, int key) {
+        if (node == null) return null;
+        if (key < node.key)      node.left  = deleteRec(node.left, key);
+        else if (key > node.key) node.right = deleteRec(node.right, key);
+        else {
+            // 찾았다 — 3가지 케이스
+            if (node.left == null)  return node.right;  // case 1, 2
+            if (node.right == null) return node.left;
+            // case 3: 자식 둘 — in-order successor로 대체
+            Node successor = minNode(node.right);
+            node.key = successor.key;
+            node.right = deleteRec(node.right, successor.key);
+        }
+        return node;
+    }
+    private Node minNode(Node node) {
+        while (node.left != null) node = node.left;
+        return node;
+    }
+
+    // In-order 순회 — 정렬된 출력
+    public void inorder() {
+        inorderRec(root);
+    }
+    private void inorderRec(Node node) {
+        if (node == null) return;
+        inorderRec(node.left);
+        System.out.print(node.key + " ");
+        inorderRec(node.right);
+    }
+}`,
+    keypoints: [
+      "재귀 함수가 항상 노드를 반환 → 호출자는 그 결과를 자기 left/right에 다시 할당. 부모-자식 포인터 갱신을 한 줄로 처리.",
+      "삭제의 자식 2개 케이스가 핵심. successor의 key만 복사하고, 그 successor를 다시 삭제 (이번엔 자식 1개 이하 케이스가 됨).",
+      "균형 트리가 아니므로 최악 O(n). 정렬된 입력 [1,2,3,...] 넣으면 연결 리스트가 됨 → AVL/RB가 필요한 이유.",
+    ],
+  },
+  avl: {
+    title: "AVL Tree — 엄격한 균형 트리",
+    intro: "1962년 Adelson-Velsky & Landis가 발명. 최초의 자가 균형 BST.\n핵심 규칙: 모든 노드의 좌우 서브트리 높이 차이 ≤ 1.",
+    balanceFactor: {
+      title: "Balance Factor (BF)",
+      desc: "BF(node) = height(node.left) − height(node.right). -1, 0, 1만 허용. 절댓값이 2 이상이면 불균형 → 회전 필요.",
+      example: `        10 (BF=0)
+       /  \\
+      5    15 (BF=-1)
+     /       \\
+    3         20
+
+각 노드의 BF가 |BF| ≤ 1 이면 AVL 만족.`,
+    },
+    rotations: {
+      title: "4가지 회전 케이스",
+      desc: "삽입/삭제 후 불균형(|BF|>1) 발생 시, 어떤 방향으로 무거워졌느냐에 따라 4가지 케이스. 각각 정해진 회전으로 균형 복원.",
+      cases: [
+        {
+          name: "LL Case — 오른쪽 회전 (Right Rotation)",
+          when: "z.left.left 쪽이 무거움 (왼쪽-왼쪽으로 추가).",
+          before: `      z (BF=2)
+     /
+    y (BF=1)
+   /
+  x   ← 새로 추가됨`,
+          after: `    y
+   / \\
+  x   z`,
+          rotation: "z를 중심으로 오른쪽 회전: y가 새 루트, z는 y의 오른쪽 자식.",
+        },
+        {
+          name: "RR Case — 왼쪽 회전 (Left Rotation)",
+          when: "z.right.right 쪽이 무거움. LL의 대칭.",
+          before: `  z (BF=-2)
+   \\
+    y (BF=-1)
+     \\
+      x   ← 새로 추가됨`,
+          after: `    y
+   / \\
+  z   x`,
+          rotation: "z를 중심으로 왼쪽 회전: y가 새 루트, z는 y의 왼쪽 자식.",
+        },
+        {
+          name: "LR Case — 좌회전 후 우회전",
+          when: "z.left.right 쪽이 무거움. 한 번의 회전으론 해결 안 됨.",
+          before: `    z (BF=2)
+   /
+  y (BF=-1)
+   \\
+    x   ← 새로 추가됨`,
+          intermediate: `    z
+   /
+  x       ← y에 좌회전 후
+ /
+y`,
+          after: `    x
+   / \\
+  y   z`,
+          rotation: "1) y를 중심으로 왼쪽 회전 → LL 형태로 변형. 2) z를 중심으로 오른쪽 회전.",
+        },
+        {
+          name: "RL Case — 우회전 후 좌회전",
+          when: "z.right.left 쪽이 무거움. LR의 대칭.",
+          before: `  z (BF=-2)
+   \\
+    y (BF=1)
+   /
+  x   ← 새로 추가됨`,
+          intermediate: `  z
+   \\
+    x       ← y에 우회전 후
+     \\
+      y`,
+          after: `    x
+   / \\
+  z   y`,
+          rotation: "1) y를 중심으로 오른쪽 회전 → RR 형태. 2) z를 중심으로 왼쪽 회전.",
+        },
+      ],
+    },
+    rotationCode: {
+      title: "회전 — Java 구현",
+      code: `// 오른쪽 회전: y가 z의 왼쪽 자식, x는 y의 왼쪽 자식인 LL 케이스
+//
+//      z              y
+//     / \\            / \\
+//    y   T4  -->    x   z
+//   / \\                / \\
+//  x   T3             T3  T4
+//
+private Node rightRotate(Node z) {
+    Node y = z.left;
+    Node T3 = y.right;
+    // 회전 수행
+    y.right = z;
+    z.left  = T3;
+    // 높이 갱신 (z를 먼저, y를 나중에 — z가 y의 자식이 됐으므로)
+    z.height = 1 + Math.max(height(z.left), height(z.right));
+    y.height = 1 + Math.max(height(y.left), height(y.right));
+    return y;  // 새 루트
+}
+
+// 왼쪽 회전: 대칭
+private Node leftRotate(Node z) {
+    Node y = z.right;
+    Node T2 = y.left;
+    y.left  = z;
+    z.right = T2;
+    z.height = 1 + Math.max(height(z.left), height(z.right));
+    y.height = 1 + Math.max(height(y.left), height(y.right));
+    return y;
+}`,
+    },
+    insertCode: {
+      title: "삽입 — Java 구현 (균형 복원 포함)",
+      code: `class AVLNode {
+    int key, height;
+    AVLNode left, right;
+    AVLNode(int key) { this.key = key; this.height = 1; }
+}
+
+class AVLTree {
+    AVLNode root;
+
+    private int height(AVLNode n) { return n == null ? 0 : n.height; }
+    private int bf(AVLNode n) {
+        return n == null ? 0 : height(n.left) - height(n.right);
+    }
+
+    public void insert(int key) { root = insertRec(root, key); }
+
+    private AVLNode insertRec(AVLNode node, int key) {
+        // 1. 일반 BST 삽입
+        if (node == null) return new AVLNode(key);
+        if (key < node.key)      node.left  = insertRec(node.left, key);
+        else if (key > node.key) node.right = insertRec(node.right, key);
+        else return node;  // 중복 무시
+
+        // 2. 높이 갱신
+        node.height = 1 + Math.max(height(node.left), height(node.right));
+
+        // 3. Balance Factor 확인 + 4가지 케이스 분기
+        int balance = bf(node);
+
+        // LL — 왼쪽이 무겁고, 새 키가 왼쪽 자식의 왼쪽으로 감
+        if (balance > 1 && key < node.left.key)
+            return rightRotate(node);
+
+        // RR — 오른쪽이 무겁고, 새 키가 오른쪽 자식의 오른쪽으로 감
+        if (balance < -1 && key > node.right.key)
+            return leftRotate(node);
+
+        // LR — 왼쪽이 무겁고, 새 키가 왼쪽 자식의 오른쪽으로 감
+        if (balance > 1 && key > node.left.key) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // RL — 오른쪽이 무겁고, 새 키가 오른쪽 자식의 왼쪽으로 감
+        if (balance < -1 && key < node.right.key) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        return node;  // 균형 OK
+    }
+}`,
+      note: "삽입 후 재귀가 부모로 되돌아갈 때마다 균형 검사. 한 번의 삽입은 최대 1번의 회전 (또는 2-step 회전)으로 균형 복원 → O(log n).",
+    },
+    summary: [
+      "Balance Factor: BF = height(left) − height(right). |BF| ≤ 1 유지.",
+      "삽입/삭제 후 재귀 stack 거슬러 올라가며 매 노드의 BF 검사.",
+      "4가지 케이스 (LL/RR/LR/RL)에 따라 1번 또는 2번 회전.",
+      "회전은 모두 O(1). 트리 높이 ≤ 1.44 log n으로 엄격하게 유지.",
+      "검색 빠르지만 삽입/삭제 시 회전 자주 일어남 → Red-Black보다 쓰기 비쌈.",
+    ],
+  },
+  rb: {
+    title: "Red-Black Tree — 느슨한 균형 트리",
+    intro: "1972년 Bayer가 제안 (당시 'symmetric binary B-tree'), 1978년 Guibas & Sedgewick이 현재 명칭으로 정리.\n핵심 규칙: 각 노드에 RED/BLACK 색을 부여하고, 색깔로 균형을 간접 유지.",
+    properties: {
+      title: "Red-Black의 5가지 속성 — 외워야 함",
+      list: [
+        { n: "1", rule: "모든 노드는 RED 또는 BLACK." },
+        { n: "2", rule: "루트는 항상 BLACK." },
+        { n: "3", rule: "모든 NIL leaf(null 자식)는 BLACK으로 간주." },
+        { n: "4", rule: "RED 노드의 자식은 반드시 BLACK (연속 RED 금지)." },
+        { n: "5", rule: "임의 노드에서 그 자손 NIL까지의 모든 경로는 같은 수의 BLACK 노드를 가진다 (이 수를 black-height라고 부름)." },
+      ],
+      why: "왜 이런 속성이 균형을 보장하나? 속성 4 (RED-RED 금지) + 속성 5 (BLACK 수 동일)로 인해 가장 긴 경로 ≤ 2 × 가장 짧은 경로. 따라서 트리 높이 ≤ 2 log(n+1).",
+    },
+    intuition: {
+      title: "왜 이렇게 복잡한가 — 직관적 이해",
+      desc: "AVL은 'BF로 균형을 정확히 측정'한다면, RB는 '색깔로 균형을 느슨하게 보장'함. 색은 회전 없이 변경 가능 → 삽입/삭제가 평균적으로 회전을 적게 함. 트리는 약간 더 높지만 (≤ 2 log n vs AVL의 1.44 log n), 쓰기 작업이 빈번한 시스템에선 이게 더 빠름.",
+      simpleAnalogy: "AVL = '키 차이 1cm까지만 허용' (엄격). RB = '대충 키가 비슷하면 OK' (느슨). 검사 비용은 RB가 적지만, 결과는 둘 다 O(log n).",
+    },
+    insertFixup: {
+      title: "삽입 후 색깔 복구 — 3가지 케이스",
+      intro: "삽입한 노드는 항상 RED로 시작 (속성 5 black-height를 안 깨려고). 부모도 RED면 속성 4 위반 → 복구 필요. uncle (부모의 형제) 색에 따라 케이스가 갈림.",
+      cases: [
+        {
+          name: "Case 1: Uncle이 RED",
+          when: "부모와 uncle 둘 다 RED.",
+          action: "색깔만 변경: 부모와 uncle → BLACK, grandparent → RED. 그 후 grandparent를 새로운 z로 보고 위로 올라가며 반복.",
+          diagram: `   G (BLACK)              G (RED) ← 새 z
+   / \\                    / \\
+  P(R) U(R)    →        P(B) U(B)
+  /                      /
+ z(R)                   z(R)`,
+          note: "회전 없이 색만 바꿈. Grandparent가 RED가 되면서 위로 전파됨.",
+        },
+        {
+          name: "Case 2: Uncle이 BLACK + z가 'inner' 자식 (LR 또는 RL 형태)",
+          when: "z가 부모의 오른쪽 자식이고 부모가 grandparent의 왼쪽 자식 (또는 대칭).",
+          action: "부모를 중심으로 회전 → Case 3 형태로 변환.",
+          diagram: `   G (BLACK)            G (BLACK)
+   / \\                  / \\
+  P(R) U(B)    →       z(R) U(B)   ← 회전 후
+   \\                   /
+   z(R)              P(R)`,
+          note: "이 케이스 자체로는 끝나지 않음 — Case 3으로 떨어뜨리기 위한 변환.",
+        },
+        {
+          name: "Case 3: Uncle이 BLACK + z가 'outer' 자식 (LL 또는 RR 형태)",
+          when: "z, 부모, grandparent가 일직선.",
+          action: "1) 부모 → BLACK, grandparent → RED. 2) grandparent를 중심으로 회전. → 끝.",
+          diagram: `   G (BLACK)            P (BLACK) ← 새 루트
+   / \\                  / \\
+  P(R) U(B)    →       z(R) G(R)
+  /                          \\
+ z(R)                         U(B)`,
+          note: "이 케이스에서 복구 완료. 회전 + 색 변경.",
+        },
+      ],
+    },
+    insertCode: {
+      title: "Red-Black 삽입 — Java 구현 (핵심)",
+      code: `enum Color { RED, BLACK }
+
+class RBNode {
+    int key;
+    Color color;
+    RBNode left, right, parent;
+    RBNode(int key) { this.key = key; this.color = Color.RED; }
+}
+
+class RBTree {
+    RBNode root;
+    // NIL: 모든 leaf를 가리키는 sentinel (BLACK)
+    private final RBNode NIL = new RBNode(0);
+    { NIL.color = Color.BLACK; }
+
+    public void insert(int key) {
+        RBNode z = new RBNode(key);
+        z.left = z.right = NIL;
+
+        // 1. 일반 BST 삽입 (parent 추적)
+        RBNode y = null, x = root;
+        while (x != null && x != NIL) {
+            y = x;
+            x = key < x.key ? x.left : x.right;
+        }
+        z.parent = y;
+        if (y == null) root = z;
+        else if (key < y.key) y.left = z;
+        else y.right = z;
+
+        // 2. 색깔 복구 (z는 RED로 시작)
+        insertFixup(z);
+    }
+
+    private void insertFixup(RBNode z) {
+        while (z.parent != null && z.parent.color == Color.RED) {
+            RBNode gp = z.parent.parent;
+            if (z.parent == gp.left) {
+                RBNode uncle = gp.right;
+                // Case 1: uncle RED — 색만 바꾸고 위로
+                if (uncle.color == Color.RED) {
+                    z.parent.color = Color.BLACK;
+                    uncle.color    = Color.BLACK;
+                    gp.color       = Color.RED;
+                    z = gp;
+                } else {
+                    // Case 2: z가 inner (오른쪽) — 회전으로 outer로 변환
+                    if (z == z.parent.right) {
+                        z = z.parent;
+                        leftRotate(z);
+                    }
+                    // Case 3: z가 outer (왼쪽) — 색 바꾸고 회전
+                    z.parent.color = Color.BLACK;
+                    gp.color       = Color.RED;
+                    rightRotate(gp);
+                }
+            } else {
+                // 대칭 (parent가 오른쪽 자식일 때)
+                RBNode uncle = gp.left;
+                if (uncle.color == Color.RED) {
+                    z.parent.color = Color.BLACK;
+                    uncle.color    = Color.BLACK;
+                    gp.color       = Color.RED;
+                    z = gp;
+                } else {
+                    if (z == z.parent.left) {
+                        z = z.parent;
+                        rightRotate(z);
+                    }
+                    z.parent.color = Color.BLACK;
+                    gp.color       = Color.RED;
+                    leftRotate(gp);
+                }
+            }
+        }
+        root.color = Color.BLACK;  // 속성 2 보장
+    }
+
+    // leftRotate, rightRotate는 AVL과 동일한 패턴
+    // (단, parent 포인터도 업데이트 필요)
+}`,
+      note: "삭제는 더 복잡함 — '이중 BLACK' 개념과 4가지 fixup 케이스가 등장. 면접에선 보통 삽입까지만 묻고, 삭제는 '복잡해서 외우기 어렵다, 라이브러리 쓴다'고 답해도 OK.",
+    },
+    summary: [
+      "5가지 속성을 코드 레벨에서 유지하면 자동으로 균형. 외우는 게 출발점.",
+      "삽입한 노드는 항상 RED. 부모도 RED면 fixup으로 복구.",
+      "Uncle 색깔에 따라 3가지 케이스: RED → 재색칠 후 위로 / BLACK + inner → 회전 후 Case 3 / BLACK + outer → 회전 + 재색칠.",
+      "AVL보다 회전 적음 (삽입 시 최대 2회). 트리는 약간 더 높지만 쓰기가 빈번할 때 유리.",
+      "Java TreeMap, C++ std::map, Linux 커널의 CFS 스케줄러가 모두 RB 트리.",
+    ],
+  },
   summary: {
     title: "핵심 개념 정리",
     items: [
@@ -142,8 +549,11 @@ const KO = {
       { label: "삭제", text: "leaf → 제거, 자식 1개 → 대체, 자식 2개 → in-order successor로 대체 후 제거." },
       { label: "In-order 순회", text: "BST의 가장 중요한 속성: 정렬된 순서로 방문. 정렬된 배열을 얻을 수 있음." },
       { label: "최악 케이스", text: "정렬된 입력 → 편향 트리 → 연결 리스트와 동일한 O(n). 균형 트리로 해결." },
-      { label: "AVL", text: "엄격한 균형. 회전이 잦지만 트리 높이가 낮음. 검색 위주 환경에 유리." },
-      { label: "Red-Black", text: "느슨한 균형. 삽입/삭제가 빠름. C++ std::map, Java TreeMap의 기반." },
+      { label: "AVL Balance Factor", text: "BF = h(left) - h(right). |BF| ≤ 1. LL/RR/LR/RL 4가지 회전 케이스로 복원." },
+      { label: "AVL 회전", text: "한 번의 삽입은 최대 1회 (LL/RR) 또는 2-step (LR/RL) 회전으로 균형 복원. 모두 O(1)." },
+      { label: "Red-Black 5속성", text: "Root BLACK, RED 자식 BLACK, 모든 경로 같은 BLACK 수. 색만으로 균형 보장." },
+      { label: "Red-Black 삽입 fixup", text: "Uncle RED → 재색칠. Uncle BLACK + inner → 회전 후 Case 3으로. Uncle BLACK + outer → 회전 + 재색칠." },
+      { label: "AVL vs RB", text: "AVL은 검색 빠르고 회전 많음. RB는 쓰기 빠르고 약간 높음. 실무 라이브러리는 RB가 표준." },
       { label: "B-Tree와의 차이", text: "BST는 자식 2개, B-Tree는 다수. 디스크 페이지 단위 I/O에 최적화 → DB 인덱스에 사용." },
     ],
   },
@@ -279,6 +689,413 @@ const EN = {
       ["Where used", "Read-heavy (DB indexes)", "General (C++ map, Java TreeMap)"],
     ],
   },
+  bstImpl: {
+    title: "Full BST Implementation — Java",
+    intro: "Recursive implementation is cleanest. Pattern: each method takes a subtree root and returns the (possibly new) root of that subtree.",
+    code: `class Node {
+    int key;
+    Node left, right;
+    Node(int key) { this.key = key; }
+}
+
+class BST {
+    Node root;
+
+    // Search — O(h)
+    public boolean search(int key) {
+        return searchRec(root, key);
+    }
+    private boolean searchRec(Node node, int key) {
+        if (node == null) return false;
+        if (key == node.key) return true;
+        return key < node.key
+            ? searchRec(node.left, key)
+            : searchRec(node.right, key);
+    }
+
+    // Insert — O(h)
+    public void insert(int key) {
+        root = insertRec(root, key);
+    }
+    private Node insertRec(Node node, int key) {
+        if (node == null) return new Node(key);
+        if (key < node.key)      node.left  = insertRec(node.left, key);
+        else if (key > node.key) node.right = insertRec(node.right, key);
+        // duplicates ignored (policy choice)
+        return node;
+    }
+
+    // Delete — O(h), three cases
+    public void delete(int key) {
+        root = deleteRec(root, key);
+    }
+    private Node deleteRec(Node node, int key) {
+        if (node == null) return null;
+        if (key < node.key)      node.left  = deleteRec(node.left, key);
+        else if (key > node.key) node.right = deleteRec(node.right, key);
+        else {
+            // found — handle the 3 cases
+            if (node.left == null)  return node.right;  // cases 1, 2
+            if (node.right == null) return node.left;
+            // case 3: two children — replace with in-order successor
+            Node successor = minNode(node.right);
+            node.key = successor.key;
+            node.right = deleteRec(node.right, successor.key);
+        }
+        return node;
+    }
+    private Node minNode(Node node) {
+        while (node.left != null) node = node.left;
+        return node;
+    }
+
+    // In-order traversal — sorted output
+    public void inorder() {
+        inorderRec(root);
+    }
+    private void inorderRec(Node node) {
+        if (node == null) return;
+        inorderRec(node.left);
+        System.out.print(node.key + " ");
+        inorderRec(node.right);
+    }
+}`,
+    keypoints: [
+      "Each recursive method returns a node; the caller reassigns its left/right. Parent-child pointer fixup happens in a single line.",
+      "The two-children delete case is the trick: copy successor's key in place, then delete that successor (which now has at most one child).",
+      "Without balancing, worst case is O(n). Inserting sorted [1, 2, 3, ...] makes it a linked list — the reason AVL/RB exist.",
+    ],
+  },
+  avl: {
+    title: "AVL Tree — Strictly Balanced BST",
+    intro: "Invented in 1962 by Adelson-Velsky and Landis. The first self-balancing BST.\nCore rule: for every node, the heights of its two children differ by at most 1.",
+    balanceFactor: {
+      title: "Balance Factor (BF)",
+      desc: "BF(node) = height(node.left) − height(node.right). Only -1, 0, 1 are allowed. If |BF| ≥ 2, rebalance with a rotation.",
+      example: `        10 (BF=0)
+       /  \\
+      5    15 (BF=-1)
+     /       \\
+    3         20
+
+|BF| ≤ 1 at every node → it's an AVL tree.`,
+    },
+    rotations: {
+      title: "The Four Rotation Cases",
+      desc: "After insert/delete, if |BF| > 1, which side caused the imbalance determines one of four cases. Each has a fixed rotation pattern.",
+      cases: [
+        {
+          name: "LL Case — Right Rotation",
+          when: "z.left.left subtree is heavy (insertion went left-left).",
+          before: `      z (BF=2)
+     /
+    y (BF=1)
+   /
+  x   ← newly inserted`,
+          after: `    y
+   / \\
+  x   z`,
+          rotation: "Right-rotate around z: y becomes the new root, z becomes y's right child.",
+        },
+        {
+          name: "RR Case — Left Rotation",
+          when: "z.right.right subtree is heavy. Mirror of LL.",
+          before: `  z (BF=-2)
+   \\
+    y (BF=-1)
+     \\
+      x   ← newly inserted`,
+          after: `    y
+   / \\
+  z   x`,
+          rotation: "Left-rotate around z: y becomes the new root, z becomes y's left child.",
+        },
+        {
+          name: "LR Case — Left then Right",
+          when: "z.left.right subtree is heavy. A single rotation isn't enough.",
+          before: `    z (BF=2)
+   /
+  y (BF=-1)
+   \\
+    x   ← newly inserted`,
+          intermediate: `    z
+   /
+  x       ← after left-rotate(y)
+ /
+y`,
+          after: `    x
+   / \\
+  y   z`,
+          rotation: "1) Left-rotate around y → reduces to LL shape. 2) Right-rotate around z.",
+        },
+        {
+          name: "RL Case — Right then Left",
+          when: "z.right.left subtree is heavy. Mirror of LR.",
+          before: `  z (BF=-2)
+   \\
+    y (BF=1)
+   /
+  x   ← newly inserted`,
+          intermediate: `  z
+   \\
+    x       ← after right-rotate(y)
+     \\
+      y`,
+          after: `    x
+   / \\
+  z   y`,
+          rotation: "1) Right-rotate around y → reduces to RR shape. 2) Left-rotate around z.",
+        },
+      ],
+    },
+    rotationCode: {
+      title: "Rotations — Java",
+      code: `// Right rotation: LL case where y = z.left, x = y.left
+//
+//      z              y
+//     / \\            / \\
+//    y   T4  -->    x   z
+//   / \\                / \\
+//  x   T3             T3  T4
+//
+private Node rightRotate(Node z) {
+    Node y = z.left;
+    Node T3 = y.right;
+    // perform rotation
+    y.right = z;
+    z.left  = T3;
+    // update heights (z first, then y — z is now y's child)
+    z.height = 1 + Math.max(height(z.left), height(z.right));
+    y.height = 1 + Math.max(height(y.left), height(y.right));
+    return y;  // new root of this subtree
+}
+
+// Left rotation: mirror
+private Node leftRotate(Node z) {
+    Node y = z.right;
+    Node T2 = y.left;
+    y.left  = z;
+    z.right = T2;
+    z.height = 1 + Math.max(height(z.left), height(z.right));
+    y.height = 1 + Math.max(height(y.left), height(y.right));
+    return y;
+}`,
+    },
+    insertCode: {
+      title: "Insert — Java with Rebalancing",
+      code: `class AVLNode {
+    int key, height;
+    AVLNode left, right;
+    AVLNode(int key) { this.key = key; this.height = 1; }
+}
+
+class AVLTree {
+    AVLNode root;
+
+    private int height(AVLNode n) { return n == null ? 0 : n.height; }
+    private int bf(AVLNode n) {
+        return n == null ? 0 : height(n.left) - height(n.right);
+    }
+
+    public void insert(int key) { root = insertRec(root, key); }
+
+    private AVLNode insertRec(AVLNode node, int key) {
+        // 1. Standard BST insert
+        if (node == null) return new AVLNode(key);
+        if (key < node.key)      node.left  = insertRec(node.left, key);
+        else if (key > node.key) node.right = insertRec(node.right, key);
+        else return node;  // ignore duplicates
+
+        // 2. Update height
+        node.height = 1 + Math.max(height(node.left), height(node.right));
+
+        // 3. Check balance factor and branch on the 4 cases
+        int balance = bf(node);
+
+        // LL — left-heavy, new key went left of left child
+        if (balance > 1 && key < node.left.key)
+            return rightRotate(node);
+
+        // RR — right-heavy, new key went right of right child
+        if (balance < -1 && key > node.right.key)
+            return leftRotate(node);
+
+        // LR — left-heavy, new key went right of left child
+        if (balance > 1 && key > node.left.key) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // RL — right-heavy, new key went left of right child
+        if (balance < -1 && key < node.right.key) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        return node;  // already balanced
+    }
+}`,
+      note: "Balance is checked as recursion unwinds. A single insert needs at most one rotation (or 2-step), all O(1) → total O(log n).",
+    },
+    summary: [
+      "Balance Factor: BF = height(left) − height(right). Keep |BF| ≤ 1.",
+      "On insert/delete, check BF as recursion returns up the tree.",
+      "Four cases (LL/RR/LR/RL) determine 1 or 2 rotations.",
+      "All rotations are O(1). Tree height stays ≤ 1.44 log n — strict.",
+      "Fast searches, but rotations on every write make it more expensive than Red-Black.",
+    ],
+  },
+  rb: {
+    title: "Red-Black Tree — Loosely Balanced",
+    intro: "Proposed by Bayer in 1972 ('symmetric binary B-tree'), formalized by Guibas & Sedgewick in 1978.\nCore rule: assign each node a RED or BLACK color, then enforce balance indirectly through coloring rules.",
+    properties: {
+      title: "The Five Red-Black Properties — Memorize These",
+      list: [
+        { n: "1", rule: "Every node is RED or BLACK." },
+        { n: "2", rule: "The root is always BLACK." },
+        { n: "3", rule: "Every NIL leaf (null child) is treated as BLACK." },
+        { n: "4", rule: "A RED node's children must be BLACK (no consecutive REDs)." },
+        { n: "5", rule: "Every path from a node to its descendant NILs contains the same number of BLACK nodes (the black-height)." },
+      ],
+      why: "Why do these guarantee balance? Property 4 (no double RED) plus Property 5 (equal BLACK counts) means the longest path ≤ 2 × the shortest path. So height ≤ 2 log(n+1).",
+    },
+    intuition: {
+      title: "Why So Complicated — Intuition",
+      desc: "AVL measures balance precisely (with BF). RB enforces it loosely (with colors). Colors can be changed without rotating → fewer rotations on writes. The tree is slightly taller (≤ 2 log n vs AVL's 1.44 log n), but cheaper write paths win in write-heavy workloads.",
+      simpleAnalogy: "AVL = 'heights must differ by at most 1 cm' (strict). RB = 'roughly the same height is fine' (loose). RB checks less, but both stay O(log n).",
+    },
+    insertFixup: {
+      title: "Insertion Fixup — Three Cases",
+      intro: "A newly inserted node is always colored RED (so as not to break property 5's black-height). If its parent is also RED, property 4 is violated and we fix it. The fix depends on the color of the uncle (parent's sibling).",
+      cases: [
+        {
+          name: "Case 1: Uncle is RED",
+          when: "Both parent and uncle are RED.",
+          action: "Recolor only: parent and uncle → BLACK, grandparent → RED. Then treat grandparent as the new z and continue checking upward.",
+          diagram: `   G (BLACK)              G (RED) ← new z
+   / \\                    / \\
+  P(R) U(R)    →        P(B) U(B)
+  /                      /
+ z(R)                   z(R)`,
+          note: "No rotation, just recoloring. The 'problem' may propagate up via grandparent.",
+        },
+        {
+          name: "Case 2: Uncle BLACK + z is an 'inner' child (LR or RL shape)",
+          when: "z is parent's right child while parent is grandparent's left child (or the mirror).",
+          action: "Rotate around the parent to transform into Case 3.",
+          diagram: `   G (BLACK)            G (BLACK)
+   / \\                  / \\
+  P(R) U(B)    →       z(R) U(B)   ← after rotation
+   \\                   /
+   z(R)              P(R)`,
+          note: "Doesn't finish on its own — sets up Case 3.",
+        },
+        {
+          name: "Case 3: Uncle BLACK + z is an 'outer' child (LL or RR shape)",
+          when: "z, parent, grandparent are in a straight line.",
+          action: "1) parent → BLACK, grandparent → RED. 2) Rotate around grandparent. Done.",
+          diagram: `   G (BLACK)            P (BLACK) ← new root
+   / \\                  / \\
+  P(R) U(B)    →       z(R) G(R)
+  /                          \\
+ z(R)                         U(B)`,
+          note: "This case finishes the fixup. Rotation + recoloring.",
+        },
+      ],
+    },
+    insertCode: {
+      title: "Red-Black Insert — Java (core)",
+      code: `enum Color { RED, BLACK }
+
+class RBNode {
+    int key;
+    Color color;
+    RBNode left, right, parent;
+    RBNode(int key) { this.key = key; this.color = Color.RED; }
+}
+
+class RBTree {
+    RBNode root;
+    // NIL: sentinel for all leaves (always BLACK)
+    private final RBNode NIL = new RBNode(0);
+    { NIL.color = Color.BLACK; }
+
+    public void insert(int key) {
+        RBNode z = new RBNode(key);
+        z.left = z.right = NIL;
+
+        // 1. Standard BST insert (tracking parent)
+        RBNode y = null, x = root;
+        while (x != null && x != NIL) {
+            y = x;
+            x = key < x.key ? x.left : x.right;
+        }
+        z.parent = y;
+        if (y == null) root = z;
+        else if (key < y.key) y.left = z;
+        else y.right = z;
+
+        // 2. Fix coloring (z starts RED)
+        insertFixup(z);
+    }
+
+    private void insertFixup(RBNode z) {
+        while (z.parent != null && z.parent.color == Color.RED) {
+            RBNode gp = z.parent.parent;
+            if (z.parent == gp.left) {
+                RBNode uncle = gp.right;
+                // Case 1: uncle RED — recolor, move up
+                if (uncle.color == Color.RED) {
+                    z.parent.color = Color.BLACK;
+                    uncle.color    = Color.BLACK;
+                    gp.color       = Color.RED;
+                    z = gp;
+                } else {
+                    // Case 2: z is inner (right child) — rotate to outer
+                    if (z == z.parent.right) {
+                        z = z.parent;
+                        leftRotate(z);
+                    }
+                    // Case 3: z is outer (left child) — recolor + rotate
+                    z.parent.color = Color.BLACK;
+                    gp.color       = Color.RED;
+                    rightRotate(gp);
+                }
+            } else {
+                // Mirror (parent is the right child)
+                RBNode uncle = gp.left;
+                if (uncle.color == Color.RED) {
+                    z.parent.color = Color.BLACK;
+                    uncle.color    = Color.BLACK;
+                    gp.color       = Color.RED;
+                    z = gp;
+                } else {
+                    if (z == z.parent.left) {
+                        z = z.parent;
+                        rightRotate(z);
+                    }
+                    z.parent.color = Color.BLACK;
+                    gp.color       = Color.RED;
+                    leftRotate(gp);
+                }
+            }
+        }
+        root.color = Color.BLACK;  // enforce property 2
+    }
+
+    // leftRotate, rightRotate follow the AVL pattern
+    // (but also update parent pointers)
+}`,
+      note: "Delete is harder — it brings in the 'double-black' concept and four fixup cases. In interviews, knowing insert is usually enough; for delete, it's fine to say 'too gnarly to memorize — I'd reach for the library.'",
+    },
+    summary: [
+      "Five properties enforced in code → balance falls out automatically. Start by memorizing them.",
+      "Newly inserted nodes are always RED. If parent is also RED, fixup is required.",
+      "Three cases by uncle color: RED → recolor and continue up. BLACK + inner → rotate then Case 3. BLACK + outer → rotate and recolor.",
+      "Fewer rotations than AVL (insert costs at most 2). Slightly taller tree, but better for write-heavy workloads.",
+      "Used by Java TreeMap, C++ std::map, and the Linux kernel's CFS scheduler.",
+    ],
+  },
   summary: {
     title: "Key Concepts",
     items: [
@@ -287,8 +1104,11 @@ const EN = {
       { label: "Delete", text: "Leaf → remove. One child → replace with child. Two children → swap with in-order successor, then delete that." },
       { label: "In-order traversal", text: "The most important BST property: visits in sorted order. Yields a sorted array." },
       { label: "Worst case", text: "Sorted input → skewed tree → linked-list-style O(n). Fix with balanced trees." },
-      { label: "AVL", text: "Strict balance, many rotations, but shorter tree. Better for read-heavy workloads." },
-      { label: "Red-Black", text: "Loose balance, faster insert/delete. Used by C++ std::map and Java TreeMap." },
+      { label: "AVL Balance Factor", text: "BF = h(left) − h(right). |BF| ≤ 1. Four rotation cases (LL/RR/LR/RL) restore balance." },
+      { label: "AVL rotations", text: "One insert needs at most one (LL/RR) or two-step (LR/RL) rotation. All O(1)." },
+      { label: "RB five properties", text: "Root BLACK, RED children BLACK, equal black-heights — color alone enforces balance." },
+      { label: "RB insert fixup", text: "Uncle RED → recolor. Uncle BLACK + inner → rotate into Case 3. Uncle BLACK + outer → rotate + recolor." },
+      { label: "AVL vs RB", text: "AVL: faster lookup, more rotations. RB: faster writes, slightly taller. Production libraries pick RB." },
       { label: "vs B-Tree", text: "BST has 2 children; B-Tree has many. B-Tree is optimized for disk page I/O → DB indexes." },
     ],
   },
@@ -560,6 +1380,170 @@ export default function BSTPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Section>
+
+        {/* 07 - BST Java implementation */}
+        <Section number="07" title={t.bstImpl.title} description={t.bstImpl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.bstImpl.code}</pre>
+            <div className="mt-4 space-y-2">
+              {t.bstImpl.keypoints.map((kp, i) => (
+                <div key={i} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">💡 {kp}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        {/* 08 - AVL deep dive */}
+        <Section number="08" title={t.avl.title} description={t.avl.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5">
+            {/* Balance Factor */}
+            <div>
+              <h4 className="text-xs font-mono text-cyan-300 mb-2 font-semibold">
+                {t.avl.balanceFactor.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-3">{t.avl.balanceFactor.desc}</p>
+              <pre className="text-[11px] font-mono text-cyan-300/80 leading-relaxed bg-zinc-900/30 p-3 rounded">{t.avl.balanceFactor.example}</pre>
+            </div>
+
+            {/* 4 rotation cases */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-cyan-300 mb-2 font-semibold">
+                {t.avl.rotations.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-4">{t.avl.rotations.desc}</p>
+              <div className="space-y-3">
+                {t.avl.rotations.cases.map((c) => (
+                  <div key={c.name} className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
+                    <div className="text-xs font-mono text-cyan-300 font-semibold mb-2">{c.name}</div>
+                    <p className="text-[11px] text-zinc-400 mb-3">{c.when}</p>
+                    <div className={`grid ${("intermediate" in c) ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"} gap-3`}>
+                      <div>
+                        <div className="text-[10px] font-mono text-red-400 mb-1">{lang === "ko" ? "회전 전 (불균형)" : "Before (unbalanced)"}</div>
+                        <pre className="text-[10px] font-mono text-zinc-400 bg-black/30 p-2 rounded">{c.before}</pre>
+                      </div>
+                      {"intermediate" in c && c.intermediate && (
+                        <div>
+                          <div className="text-[10px] font-mono text-amber-400 mb-1">{lang === "ko" ? "1차 회전 후" : "After first rotation"}</div>
+                          <pre className="text-[10px] font-mono text-zinc-400 bg-black/30 p-2 rounded">{c.intermediate}</pre>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-[10px] font-mono text-emerald-400 mb-1">{lang === "ko" ? "회전 후 (균형)" : "After (balanced)"}</div>
+                        <pre className="text-[10px] font-mono text-zinc-400 bg-black/30 p-2 rounded">{c.after}</pre>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 italic mt-2">→ {c.rotation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rotation Java code */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-cyan-300 mb-3 font-semibold">{t.avl.rotationCode.title}</h4>
+              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.avl.rotationCode.code}</pre>
+            </div>
+
+            {/* Insert Java code */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-cyan-300 mb-3 font-semibold">{t.avl.insertCode.title}</h4>
+              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.avl.insertCode.code}</pre>
+              <p className="text-[10px] text-zinc-500 italic mt-3">💡 {t.avl.insertCode.note}</p>
+            </div>
+
+            {/* AVL summary */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-cyan-300 mb-2 font-semibold">
+                {lang === "ko" ? "AVL 한 줄 요약" : "AVL Quick Recap"}
+              </h4>
+              <ul className="space-y-1.5">
+                {t.avl.summary.map((s, i) => (
+                  <li key={i} className="text-[11px] text-zinc-400 leading-relaxed flex gap-2">
+                    <span className="text-cyan-400">•</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Section>
+
+        {/* 09 - Red-Black deep dive */}
+        <Section number="09" title={t.rb.title} description={t.rb.intro}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5">
+            {/* 5 properties */}
+            <div>
+              <h4 className="text-xs font-mono text-rose-300 mb-3 font-semibold">
+                {t.rb.properties.title}
+              </h4>
+              <div className="space-y-1.5">
+                {t.rb.properties.list.map((p) => (
+                  <div key={p.n} className="flex items-baseline gap-3 text-[11px] font-mono">
+                    <span className="text-rose-400 font-bold w-6">{p.n}.</span>
+                    <span className="text-zinc-400">{p.rule}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
+                <p className="text-[11px] text-rose-300/80 leading-relaxed">💡 {t.rb.properties.why}</p>
+              </div>
+            </div>
+
+            {/* Intuition */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-rose-300 mb-2 font-semibold">
+                {t.rb.intuition.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-3 leading-relaxed">{t.rb.intuition.desc}</p>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                <p className="text-[11px] text-amber-300/80 italic">🔍 {t.rb.intuition.simpleAnalogy}</p>
+              </div>
+            </div>
+
+            {/* Insert fixup 3 cases */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-rose-300 mb-2 font-semibold">
+                {t.rb.insertFixup.title}
+              </h4>
+              <p className="text-[11px] text-zinc-500 mb-4">{t.rb.insertFixup.intro}</p>
+              <div className="space-y-3">
+                {t.rb.insertFixup.cases.map((c) => (
+                  <div key={c.name} className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-4">
+                    <div className="text-xs font-mono text-rose-300 font-semibold mb-2">{c.name}</div>
+                    <p className="text-[11px] text-zinc-400 mb-2"><span className="text-zinc-500">{lang === "ko" ? "조건: " : "When: "}</span>{c.when}</p>
+                    <p className="text-[11px] text-zinc-400 mb-3"><span className="text-zinc-500">{lang === "ko" ? "동작: " : "Action: "}</span>{c.action}</p>
+                    <pre className="text-[10px] font-mono text-zinc-400 bg-black/30 p-3 rounded">{c.diagram}</pre>
+                    <p className="text-[10px] text-zinc-500 italic mt-2">→ {c.note}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Insert Java code */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-rose-300 mb-3 font-semibold">{t.rb.insertCode.title}</h4>
+              <pre className="text-[11px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded overflow-x-auto">{t.rb.insertCode.code}</pre>
+              <p className="text-[10px] text-zinc-500 italic mt-3">⚠ {t.rb.insertCode.note}</p>
+            </div>
+
+            {/* RB summary */}
+            <div className="border-t border-zinc-800 pt-5">
+              <h4 className="text-xs font-mono text-rose-300 mb-2 font-semibold">
+                {lang === "ko" ? "Red-Black 한 줄 요약" : "Red-Black Quick Recap"}
+              </h4>
+              <ul className="space-y-1.5">
+                {t.rb.summary.map((s, i) => (
+                  <li key={i} className="text-[11px] text-zinc-400 leading-relaxed flex gap-2">
+                    <span className="text-rose-400">•</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </Section>
 
